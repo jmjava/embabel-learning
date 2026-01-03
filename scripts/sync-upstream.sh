@@ -1,7 +1,7 @@
 #!/bin/bash
 # Sync your fork with upstream changes (READ-ONLY from embabel)
 # Usage: ./sync-upstream.sh [guide|agent|all]
-# 
+#
 # SAFETY: This script only PULLS from embabel, never PUSHES to it
 
 set -e

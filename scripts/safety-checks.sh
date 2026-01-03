@@ -16,14 +16,14 @@ check_embabel_repo() {
 
     # Check all remotes for embabel organization
     local remotes=$(git remote -v 2>/dev/null | grep -i "embabel/" | grep -v "jmjava" || true)
-    
+
     if [ -n "$remotes" ]; then
         # Check if origin points to embabel (not jmjava fork)
         local origin_url=$(git remote get-url origin 2>/dev/null || echo "")
         if [[ "$origin_url" == *"embabel/"* ]] && [[ "$origin_url" != *"jmjava"* ]]; then
             return 0  # This is an embabel repo
         fi
-        
+
         # Check if we're in a directory that's clearly an embabel repo
         local current_dir=$(pwd)
         if [[ "$current_dir" == *"/embabel-"* ]] || [[ "$current_dir" == *"/guide"* ]]; then
@@ -34,7 +34,7 @@ check_embabel_repo() {
             fi
         fi
     fi
-    
+
     return 1  # Not an embabel repo
 }
 
@@ -65,7 +65,7 @@ block_embabel_commit() {
 block_embabel_push() {
     local remote=${1:-origin}
     local remote_url=$(git remote get-url "$remote" 2>/dev/null || echo "")
-    
+
     if [[ "$remote_url" == *"embabel/"* ]] && [[ "$remote_url" != *"jmjava"* ]]; then
         echo -e "${RED}✗ SAFETY BLOCK: Cannot push to embabel organization${NC}"
         echo -e "${YELLOW}Remote: $remote${NC}"
@@ -103,10 +103,9 @@ warn_if_embabel_repo() {
 is_safe_remote() {
     local remote=${1:-origin}
     local remote_url=$(git remote get-url "$remote" 2>/dev/null || echo "")
-    
+
     if [[ "$remote_url" == *"embabel/"* ]] && [[ "$remote_url" != *"jmjava"* ]]; then
         return 1  # Not safe
     fi
     return 0  # Safe
 }
-

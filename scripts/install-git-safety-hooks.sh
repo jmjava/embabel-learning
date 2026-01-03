@@ -44,10 +44,10 @@ while read local_ref local_sha remote_ref remote_sha; do
     if [ -z "$remote_ref" ]; then
         continue
     fi
-    
+
     # Extract remote name (e.g., "origin" from "refs/heads/main")
     remote=$(echo "$remote_ref" | cut -d'/' -f1)
-    
+
     if ! block_embabel_push "$remote"; then
         exit 1
     fi
@@ -65,4 +65,3 @@ echo -e "  • Block commits if 'origin' points to embabel"
 echo -e "  • Block pushes to embabel organization"
 echo -e "  • Allow all operations on your forks (jmjava/...)"
 echo ""
-
