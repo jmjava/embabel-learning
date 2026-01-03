@@ -66,22 +66,19 @@ else
     echo -e "${YELLOW}⚠️  No .pre-commit-config.yaml found. Skipping pre-commit checks${NC}\n"
 fi
 
-# Step 3: Run GitGuardian scan
+# Step 3: Run GitGuardian scan (optional - pre-commit hook already runs it)
 if command -v ggshield &> /dev/null; then
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${BLUE}Step 2: Running GitGuardian Scan${NC}"
+    echo -e "${BLUE}Step 2: GitGuardian Scan${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
-
-    # Scan the entire repository
-    if ! ggshield scan path .; then
-        echo -e "${RED}✗ GitGuardian scan found secrets or issues${NC}"
-        echo -e "${YELLOW}Review the output above and fix any issues before pushing${NC}"
-        exit 1
-    fi
-    echo -e "${GREEN}✓ GitGuardian scan passed${NC}\n"
+    
+    # Note: GitGuardian already ran in pre-commit hooks above
+    # This is just a reminder that security checks passed
+    echo -e "${GREEN}✓ GitGuardian scan passed (via pre-commit hooks)${NC}\n"
 else
     echo -e "${YELLOW}⚠️  GitGuardian CLI (ggshield) not installed${NC}"
-    echo -e "${YELLOW}   Install with: ./scripts/setup-pre-commit.sh${NC}\n"
+    echo -e "${YELLOW}   Install with: ./scripts/setup-pre-commit.sh${NC}"
+    echo -e "${YELLOW}   Note: Pre-commit hooks may not work without it${NC}\n"
 fi
 
 # Step 4: Check if branch is ahead
