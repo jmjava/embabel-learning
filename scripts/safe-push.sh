@@ -49,7 +49,7 @@ if [ -f .pre-commit-config.yaml ]; then
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${BLUE}Step 1: Running Pre-commit Hooks${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
-    
+
     if command -v pre-commit &> /dev/null; then
         # Run on all files in the repo (comprehensive check)
         if ! pre-commit run --all-files; then
@@ -71,7 +71,7 @@ if command -v ggshield &> /dev/null; then
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${BLUE}Step 2: Running GitGuardian Scan${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
-    
+
     # Scan the entire repository
     if ! ggshield scan; then
         echo -e "${RED}✗ GitGuardian scan found secrets or issues${NC}"
@@ -104,7 +104,7 @@ if git show-ref --verify --quiet "refs/remotes/$REMOTE_REF" 2>/dev/null; then
     echo -e "${CYAN}Commits to push:${NC}"
     git log --oneline "$REMOTE_REF".."$BRANCH" 2>/dev/null || git log --oneline "$BRANCH" 2>/dev/null | head -5
     echo ""
-    
+
     echo -e "${CYAN}Files changed:${NC}"
     git diff --stat "$REMOTE_REF".."$BRANCH" 2>/dev/null || git diff --stat HEAD~5..HEAD 2>/dev/null | head -10
     echo ""
@@ -142,7 +142,7 @@ if git push "$REMOTE" "$BRANCH"; then
     echo ""
     echo -e "${GREEN}✓ Successfully pushed to $REMOTE/$BRANCH${NC}"
     echo ""
-    
+
     # Show PR creation suggestion if pushing to origin
     if [ "$REMOTE" = "origin" ]; then
         REPO_URL=$(git remote get-url origin 2>/dev/null | sed 's/\.git$//' | sed 's/git@github\.com:/https:\/\/github.com\//')
@@ -157,4 +157,3 @@ else
     echo -e "${RED}✗ Push failed${NC}"
     exit 1
 fi
-

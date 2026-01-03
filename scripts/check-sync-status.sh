@@ -17,24 +17,24 @@ NC='\033[0m'
 check_repo() {
     local repo_dir=$1
     local repo_name=$2
-    
+
     if [ ! -d "$repo_dir" ]; then
         echo -e "${RED}✗ $repo_name: Not cloned${NC}"
         echo -e "   ${YELLOW}Run:${NC} cd ~/github/jmjava && git clone git@github.com:jmjava/$repo_name.git"
         echo ""
         return
     fi
-    
+
     cd "$repo_dir"
-    
+
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${BLUE}📦 Repository: $repo_name${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
-    
+
     # Check current branch
     local current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
     echo -e "${CYAN}Current branch:${NC} $current_branch"
-    
+
     # Check for uncommitted changes
     if ! git diff-index --quiet HEAD -- 2>/dev/null; then
         echo -e "${YELLOW}⚠️  Uncommitted changes detected:${NC}"
@@ -42,7 +42,7 @@ check_repo() {
         echo -e "${YELLOW}   Fix:${NC} git stash (to save) or git commit (to commit)"
         echo ""
     fi
-    
+
     # Check remotes
     if ! git remote | grep -q "upstream"; then
         echo -e "${RED}✗ Upstream remote not configured${NC}"
@@ -50,12 +50,12 @@ check_repo() {
         echo ""
         return
     fi
-    
+
     # Fetch latest
     echo -e "${YELLOW}Fetching latest from remotes...${NC}"
     git fetch upstream --quiet 2>/dev/null || echo "  ⚠️  Could not fetch upstream"
     git fetch origin --quiet 2>/dev/null || echo "  ⚠️  Could not fetch origin"
-    
+
     # Find main branch
     local main_branch=""
     if git show-ref --verify --quiet refs/remotes/upstream/main 2>/dev/null; then
@@ -67,22 +67,22 @@ check_repo() {
         echo ""
         return
     fi
-    
+
     # Compare with upstream
     local LOCAL=$(git rev-parse HEAD 2>/dev/null)
     local UPSTREAM=$(git rev-parse upstream/$main_branch 2>/dev/null)
     local ORIGIN=$(git rev-parse origin/$current_branch 2>/dev/null || echo "")
-    
+
     if [ -z "$LOCAL" ] || [ -z "$UPSTREAM" ]; then
         echo -e "${RED}✗ Could not determine commit status${NC}"
         echo ""
         return
     fi
-    
+
     # Check if behind upstream
     local BEHIND=$(git rev-list --count HEAD..upstream/$main_branch 2>/dev/null || echo "0")
     local AHEAD=$(git rev-list --count upstream/$main_branch..HEAD 2>/dev/null || echo "0")
-    
+
     # Check if origin is different
     local ORIGIN_BEHIND=""
     local ORIGIN_AHEAD=""
@@ -90,11 +90,11 @@ check_repo() {
         ORIGIN_BEHIND=$(git rev-list --count HEAD..origin/$current_branch 2>/dev/null || echo "0")
         ORIGIN_AHEAD=$(git rev-list --count origin/$current_branch..HEAD 2>/dev/null || echo "0")
     fi
-    
+
     # Status summary
     echo ""
     echo -e "${CYAN}Sync Status:${NC}"
-    
+
     if [ "$BEHIND" = "0" ] && [ "$AHEAD" = "0" ]; then
         echo -e "  ${GREEN}✓ In sync with upstream/$main_branch${NC}"
     else
@@ -107,7 +107,7 @@ check_repo() {
             git log --oneline upstream/$main_branch..HEAD 2>/dev/null | head -3 | sed 's/^/       /' || true
         fi
     fi
-    
+
     if [ -n "$ORIGIN" ]; then
         if [ "$ORIGIN_BEHIND" != "0" ] || [ "$ORIGIN_AHEAD" != "0" ]; then
             echo -e "  ${YELLOW}⚠️  Origin differs from local${NC}"
@@ -121,20 +121,20 @@ check_repo() {
             echo -e "  ${GREEN}✓ In sync with origin/$current_branch${NC}"
         fi
     fi
-    
+
     echo ""
-    
+
     # Provide fix commands
     if [ "$BEHIND" != "0" ] || [ "$AHEAD" != "0" ]; then
         echo -e "${CYAN}To Fix:${NC}"
-        
+
         if [ "$BEHIND" != "0" ]; then
             echo -e "  ${YELLOW}1. Sync with upstream:${NC}"
             echo -e "     ${GREEN}esync $repo_name${NC}"
             echo -e "     ${GREEN}Or:${NC} cd $repo_dir && git pull upstream $main_branch"
             echo ""
         fi
-        
+
         if [ "$AHEAD" != "0" ]; then
             echo -e "  ${YELLOW}2. Your local commits (decide what to do):${NC}"
             echo -e "     ${CYAN}Option A:${NC} Keep and push to origin (use epush for safety)"
@@ -145,7 +145,7 @@ check_repo() {
             echo ""
         fi
     fi
-    
+
     # IDE refresh suggestion
     if [ "$BEHIND" != "0" ] || [ "$AHEAD" != "0" ]; then
         echo -e "${CYAN}After syncing, refresh your IDE:${NC}"
@@ -177,4 +177,3 @@ esac
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}Check complete!${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-

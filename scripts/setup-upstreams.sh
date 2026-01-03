@@ -26,7 +26,7 @@ for dir in "$BASE_DIR"/*/; do
     if [ -d "$dir/.git" ]; then
         repo_name=$(basename "$dir")
         cd "$dir"
-        
+
         # Check if it's a fork of embabel
         if gh repo view "$YOUR_USER/$repo_name" --json parent --jq '.parent.owner.login' 2>/dev/null | grep -q "$EMBABEL_ORG"; then
             CLONED_REPOS+=("$repo_name")
@@ -53,14 +53,14 @@ FAILED=0
 
 for repo in "${CLONED_REPOS[@]}"; do
     cd "$BASE_DIR/$repo"
-    
+
     echo -e "${YELLOW}Processing $repo...${NC}"
-    
+
     # Check if upstream already exists
     if git remote | grep -q "^upstream$"; then
         CURRENT_UPSTREAM=$(git remote get-url upstream 2>/dev/null || echo "")
         EXPECTED_UPSTREAM="git@github.com:$EMBABEL_ORG/$repo.git"
-        
+
         if [ "$CURRENT_UPSTREAM" = "$EXPECTED_UPSTREAM" ]; then
             echo -e "${BLUE}⊝ Upstream already configured correctly${NC}"
             ALREADY_SET=$((ALREADY_SET + 1))
@@ -82,7 +82,7 @@ for repo in "${CLONED_REPOS[@]}"; do
             FAILED=$((FAILED + 1))
         fi
     fi
-    
+
     # Fetch from upstream
     echo -e "${YELLOW}  Fetching from upstream...${NC}"
     if git fetch upstream --quiet 2>/dev/null; then
@@ -90,7 +90,7 @@ for repo in "${CLONED_REPOS[@]}"; do
     else
         echo -e "${RED}  ⚠️  Could not fetch from upstream (check SSH access)${NC}"
     fi
-    
+
     echo ""
 done
 
@@ -120,4 +120,3 @@ echo "   ./compare-branches.sh all"
 echo ""
 
 echo -e "${GREEN}✓ Done!${NC}"
-

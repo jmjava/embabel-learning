@@ -184,4 +184,3 @@ echo "3. Review the code changes"
 echo "4. Prepare answers to potential questions"
 echo ""
 echo -e "${GREEN}You're now ready for discussions about PR #$PR_NUM!${NC}"
-

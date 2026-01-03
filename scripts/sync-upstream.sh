@@ -16,12 +16,12 @@ NC='\033[0m'
 sync_repo() {
     local repo_dir=$1
     local repo_name=$2
-    
+
     cd "$repo_dir"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${BLUE}🔄 Syncing: $repo_name${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
-    
+
     # Check if upstream is configured
     if ! git remote | grep -q "upstream"; then
         echo -e "${RED}⚠️  No upstream remote configured!${NC}"
@@ -29,22 +29,22 @@ sync_repo() {
         echo "  git remote add upstream git@github.com:embabel/$repo_name.git"
         return 1
     fi
-    
+
     # Get current branch
     local current_branch=$(git rev-parse --abbrev-ref HEAD)
     echo "Current branch: $current_branch"
-    
+
     # Check for uncommitted changes
     if ! git diff-index --quiet HEAD --; then
         echo -e "${RED}⚠️  You have uncommitted changes. Please commit or stash them first.${NC}"
         git status --short
         return 1
     fi
-    
+
     # Fetch upstream
     echo -e "${YELLOW}Fetching upstream...${NC}"
     git fetch upstream
-    
+
     # Try to find the main branch (could be main or master)
     local main_branch=""
     if git show-ref --verify --quiet refs/remotes/upstream/main; then
@@ -55,13 +55,13 @@ sync_repo() {
         echo -e "${RED}Could not find upstream main or master branch${NC}"
         return 1
     fi
-    
+
     echo -e "${YELLOW}Merging upstream/$main_branch into $current_branch...${NC}"
-    
+
     # Merge upstream changes
     if git merge upstream/$main_branch --no-edit; then
         echo -e "${GREEN}✓ Successfully synced with upstream/$main_branch${NC}"
-        
+
         # Offer to push
         echo ""
         read -p "Push changes to origin? (y/n) " -n 1 -r
@@ -90,7 +90,7 @@ sync_repo() {
         echo "  git merge --continue"
         return 1
     fi
-    
+
     echo ""
 }
 
@@ -113,4 +113,3 @@ case "${1:-all}" in
 esac
 
 echo -e "${GREEN}✓ Sync complete!${NC}"
-

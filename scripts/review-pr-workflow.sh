@@ -56,11 +56,11 @@ cd "$REPO_DIR"
 if git remote | grep -q "upstream"; then
     git fetch upstream --quiet 2>/dev/null || true
     BEHIND=$(git rev-list --count HEAD..upstream/main 2>/dev/null || git rev-list --count HEAD..upstream/master 2>/dev/null || echo "0")
-    
+
     if [ "$BEHIND" != "0" ]; then
         echo -e "${YELLOW}⚠️  Repository is $BEHIND commits behind upstream${NC}"
         echo -e "${YELLOW}   Syncing now...${NC}\n"
-        
+
         # Check for uncommitted changes
         if ! git diff-index --quiet HEAD -- 2>/dev/null; then
             echo -e "${RED}✗ You have uncommitted changes. Please commit or stash first.${NC}"
@@ -71,7 +71,7 @@ if git remote | grep -q "upstream"; then
             echo -e "  ${CYAN}2.${NC} Commit changes: ${GREEN}git commit -am 'Your message'${NC}"
             exit 1
         fi
-        
+
         # Sync
         MAIN_BRANCH=$(git show-ref --verify --quiet refs/remotes/upstream/main 2>/dev/null && echo "main" || echo "master")
         git merge upstream/$MAIN_BRANCH --no-edit 2>/dev/null || {
@@ -138,17 +138,17 @@ echo ""
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "${YELLOW}Checking out PR #$PR_NUM...${NC}"
-    
+
     # Save current branch
     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-    
+
     # Checkout PR
     if gh pr checkout "$PR_NUM" --repo "$UPSTREAM_REPO" 2>/dev/null; then
         echo -e "${GREEN}✓ PR checked out${NC}"
         echo -e "${YELLOW}You're now on a branch with the PR changes${NC}"
         echo -e "${YELLOW}To return to your branch:${NC} git checkout $CURRENT_BRANCH"
         echo ""
-        
+
         # Refresh IDE suggestion
         echo -e "${CYAN}💡 IDE Tip:${NC}"
         echo -e "  ${GREEN}1.${NC} Reload window: ${CYAN}Cmd/Ctrl+Shift+P → 'Developer: Reload Window'${NC}"
@@ -200,4 +200,3 @@ echo -e "  ${CYAN}View PR:${NC} gh pr view $PR_NUM --repo $UPSTREAM_REPO"
 echo -e "  ${CYAN}View diff:${NC} gh pr diff $PR_NUM --repo $UPSTREAM_REPO"
 echo -e "  ${CYAN}Checkout:${NC} gh pr checkout $PR_NUM --repo $UPSTREAM_REPO"
 echo ""
-

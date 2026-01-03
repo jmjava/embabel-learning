@@ -7,7 +7,7 @@ WORKSPACE_FILE="$HOME/github/jmjava/embabel-workspace.code-workspace"
 if [ ! -f "$WORKSPACE_FILE" ]; then
     echo "❌ Workspace file not found at: $WORKSPACE_FILE"
     echo "Creating it now..."
-    
+
     cat > "$WORKSPACE_FILE" << 'EOF'
 {
     "folders": [
@@ -51,4 +51,3 @@ else
     echo "  code $WORKSPACE_FILE"
     exit 1
 fi
-

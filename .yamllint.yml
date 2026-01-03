@@ -10,4 +10,3 @@ rules:
   document-start: disable
   truthy:
     allowed-values: ['true', 'false', 'on', 'off', 'yes', 'no']
-

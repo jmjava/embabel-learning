@@ -379,4 +379,3 @@ Full documentation:
 **You're now equipped to confidently discuss any of your contributions!** 🚀
 
 Questions? Check the docs or review the script comments for details.
-

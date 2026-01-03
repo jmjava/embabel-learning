@@ -91,7 +91,7 @@ FAILED_REPOS=()
 
 for repo in "${TO_FORK[@]}"; do
     echo -e "${YELLOW}Forking $repo...${NC}"
-    
+
     if gh repo fork "$EMBABEL_ORG/$repo" --clone=false; then
         echo -e "${GREEN}✓ Successfully forked $repo${NC}"
         FORKED=$((FORKED + 1))
@@ -101,7 +101,7 @@ for repo in "${TO_FORK[@]}"; do
         FAILED_REPOS+=("$repo")
     fi
     echo ""
-    
+
     # Be nice to GitHub API
     sleep 1
 done
@@ -137,4 +137,3 @@ if [ $FORKED -gt 0 ]; then
 fi
 
 echo -e "${GREEN}✓ Done!${NC}"
-

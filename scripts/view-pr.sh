@@ -62,4 +62,3 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 echo -e "${GREEN}Want to test this PR locally?${NC}"
 echo -e "${GREEN}Run: gh pr checkout $PR_NUM --repo $UPSTREAM_REPO${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-

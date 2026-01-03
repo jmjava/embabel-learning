@@ -23,12 +23,12 @@ monitor_repo() {
     local repo_name=$2
     local upstream_owner=$3
     local upstream_repo=$4
-    
+
     cd "$repo_dir"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${BLUE}📦 Repository: $repo_name${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
-    
+
     # 1. Fetch all changes from upstream
     echo -e "${YELLOW}🔄 Fetching upstream changes...${NC}"
     if git remote | grep -q "upstream"; then
@@ -37,22 +37,22 @@ monitor_repo() {
     else
         echo "⚠️  No upstream remote configured"
     fi
-    
+
     # Fetch origin too
     git fetch origin --quiet
     echo "✓ Origin fetched"
     echo ""
-    
+
     # 2. Show open PRs in upstream
     echo -e "${YELLOW}📋 Open Pull Requests in upstream:${NC}"
     gh pr list --repo "$upstream_owner/$upstream_repo" --limit 10 || echo "Unable to fetch PRs"
     echo ""
-    
+
     # 3. Show recent releases
     echo -e "${YELLOW}🏷️  Recent Releases:${NC}"
     gh release list --repo "$upstream_owner/$upstream_repo" --limit 5 || echo "No releases found"
     echo ""
-    
+
     # 4. Show commits on upstream main that you don't have
     echo -e "${YELLOW}📝 New commits in upstream (last 10):${NC}"
     if git remote | grep -q "upstream"; then
@@ -61,13 +61,13 @@ monitor_repo() {
         echo "Could not find upstream main/master branch"
     fi
     echo ""
-    
+
     # 5. Show your local changes not pushed
     echo -e "${YELLOW}🔧 Your unpushed commits:${NC}"
     local current_branch=$(git rev-parse --abbrev-ref HEAD)
     git log --oneline origin/$current_branch..$current_branch 2>/dev/null || echo "No unpushed commits"
     echo ""
-    
+
     echo ""
 }
 
@@ -88,4 +88,3 @@ fi
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}✓ Monitoring complete!${NC}"
 echo -e "${GREEN}========================================${NC}"
-

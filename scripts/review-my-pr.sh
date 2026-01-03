@@ -107,4 +107,3 @@ echo ""
 echo "4. Add a comment:"
 echo "   gh pr comment $PR_NUM --repo $UPSTREAM_REPO"
 echo ""
-

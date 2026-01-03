@@ -101,7 +101,7 @@ for repo in "${TO_CLONE[@]}"; do
             continue
         fi
     fi
-    
+
     echo -e "${YELLOW}Cloning $repo...${NC}"
     if gh repo clone "$YOUR_USER/$repo"; then
         echo -e "${GREEN}✓ Successfully cloned $repo${NC}"
@@ -133,4 +133,3 @@ if [ $CLONED -gt 0 ]; then
 fi
 
 echo -e "${GREEN}✓ Done!${NC}"
-

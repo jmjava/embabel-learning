@@ -70,4 +70,3 @@ echo "================================================"
 echo ""
 echo "  source ~/.bash_aliases && elist"
 echo ""
-

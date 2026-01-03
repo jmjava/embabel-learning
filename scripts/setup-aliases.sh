@@ -70,4 +70,3 @@ echo "  eworkspace - Open multi-repo workspace in Cursor"
 echo "  gst        - git status"
 echo "  glog       - pretty git log"
 echo "  gfetch     - fetch from all remotes"
-

@@ -136,8 +136,8 @@ fi
 cat > "$OUTPUT_FILE" << EOF
 # 🎯 Embabel Learning - Catch-Up Summary
 
-**Catch-Up Date:** $CATCH_UP_DATE  
-**Last Session:** $LAST_SESSION  
+**Catch-Up Date:** $CATCH_UP_DATE
+**Last Session:** $LAST_SESSION
 **Generated:** $CURRENT_DATETIME
 
 ## 📊 Your Current Status
@@ -194,4 +194,3 @@ rm -f "$CONTRIBUTIONS" "$REPO_STATUS" "$CHANGES" "$ACTION_ITEMS"
 
 echo -e "${GREEN}✓ Catch-up summary generated: $OUTPUT_FILE${NC}"
 echo -e "${YELLOW}Review and customize the file as needed.${NC}"
-

@@ -71,24 +71,24 @@ AGENT_DIR="$HOME/github/jmjava/embabel-agent"
 check_repo_sync() {
     local repo_dir=$1
     local repo_name=$2
-    
+
     if [ ! -d "$repo_dir" ]; then
         return
     fi
-    
+
     cd "$repo_dir" 2>/dev/null || return
-    
+
     # Check if diverged
     if git remote | grep -q "upstream"; then
         git fetch upstream --quiet 2>/dev/null || true
         LOCAL=$(git rev-parse @ 2>/dev/null)
         REMOTE=$(git rev-parse @{u} 2>/dev/null)
         UPSTREAM=$(git rev-parse upstream/main 2>/dev/null || git rev-parse upstream/master 2>/dev/null || echo "")
-        
+
         if [ -n "$UPSTREAM" ] && [ "$LOCAL" != "$UPSTREAM" ]; then
             BEHIND=$(git rev-list --count HEAD..upstream/main 2>/dev/null || git rev-list --count HEAD..upstream/master 2>/dev/null || echo "?")
             AHEAD=$(git rev-list --count upstream/main..HEAD 2>/dev/null || git rev-list --count upstream/master..HEAD 2>/dev/null || echo "?")
-            
+
             if [ "$BEHIND" != "0" ] || [ "$AHEAD" != "0" ]; then
                 echo "- **$repo_name**: $BEHIND commits behind, $AHEAD commits ahead" >> "$SYNC_ITEMS"
                 echo "  Run: \`esync $repo_name\` or \`cd $repo_dir && git pull upstream main\`" >> "$SYNC_ITEMS"
@@ -113,8 +113,8 @@ fi
 cat > "$OUTPUT_FILE" << EOF
 # 📅 Weekly Session Notes
 
-**Week of:** $WEEK_START (Monday)  
-**Week Ending:** $WEEK_END (Sunday)  
+**Week of:** $WEEK_START (Monday)
+**Week Ending:** $WEEK_END (Sunday)
 **Last Updated:** $CURRENT_DATE $CURRENT_TIME
 
 ## 🎯 Goals for This Week
@@ -266,4 +266,3 @@ rm -f "$OPEN_PRS" "$SYNC_ITEMS" "$RELEASES"
 
 echo -e "${GREEN}✓ Weekly notes generated: $OUTPUT_FILE${NC}"
 echo -e "${YELLOW}Edit the file to fill in your activities and learnings.${NC}"
-

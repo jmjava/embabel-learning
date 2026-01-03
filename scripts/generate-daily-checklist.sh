@@ -31,7 +31,7 @@ echo -e "${GREEN}Generating daily learning checklist for $CHECKLIST_DATE...${NC}
 cat > "$OUTPUT_FILE" << 'EOF'
 # 📋 Daily Learning Checklist
 
-**Date:** CHECKLIST_DATE_PLACEHOLDER  
+**Date:** CHECKLIST_DATE_PLACEHOLDER
 **Generated:** GENERATED_TIME_PLACEHOLDER
 
 > Based on learning path from [EMBABEL-WORKFLOW.md](../docs/EMBABEL-WORKFLOW.md)
@@ -88,34 +88,34 @@ cat > "$OUTPUT_FILE" << 'EOF'
 ## 📝 Daily Activities
 
 **What I did today:**
-- 
+-
 
 **What I learned:**
-- 
+-
 
 **Questions/Blockers:**
-- 
+-
 
 **Files I explored:**
-- 
+-
 
 **PRs I reviewed:**
-- 
+-
 
 ## ✅ Progress Summary
 
 **Completed today:**
-- 
+-
 
 **Still working on:**
-- 
+-
 
 **Next session focus:**
-- 
+-
 
 ## 💡 Notes & Insights
 
-- 
+-
 
 ---
 
@@ -128,4 +128,3 @@ sed -i "s/GENERATED_TIME_PLACEHOLDER/$CURRENT_TIME/g" "$OUTPUT_FILE"
 
 echo -e "${GREEN}✓ Daily checklist generated: $OUTPUT_FILE${NC}"
 echo -e "${YELLOW}Edit the file to track your progress throughout the day.${NC}"
-

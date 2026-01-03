@@ -38,22 +38,22 @@ AGENT_DIR="$HOME/github/jmjava/embabel-agent"
 check_repo_sync() {
     local repo_dir=$1
     local repo_name=$2
-    
+
     if [ ! -d "$repo_dir" ]; then
         return
     fi
-    
+
     cd "$repo_dir" 2>/dev/null || return
-    
+
     if git remote | grep -q "upstream"; then
         git fetch upstream --quiet 2>/dev/null || true
         UPSTREAM=$(git rev-parse upstream/main 2>/dev/null || git rev-parse upstream/master 2>/dev/null || echo "")
         LOCAL=$(git rev-parse @ 2>/dev/null)
-        
+
         if [ -n "$UPSTREAM" ] && [ "$LOCAL" != "$UPSTREAM" ]; then
             BEHIND=$(git rev-list --count HEAD..upstream/main 2>/dev/null || git rev-list --count HEAD..upstream/master 2>/dev/null || echo "?")
             AHEAD=$(git rev-list --count upstream/main..HEAD 2>/dev/null || git rev-list --count upstream/master..HEAD 2>/dev/null || echo "?")
-            
+
             if [ "$BEHIND" != "0" ] || [ "$AHEAD" != "0" ]; then
                 if [ "$BEHIND" != "0" ]; then
                     add_action "Sync $repo_name: $BEHIND commits behind upstream"
@@ -130,7 +130,7 @@ if [ "$AGENT_RELEASE_COUNT" -gt 0 ]; then
         PUBLISHED_EPOCH=$(date -d "$published" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$published" +%s 2>/dev/null || echo "0")
         NOW_EPOCH=$(date +%s)
         DAYS_AGO=$(( (NOW_EPOCH - PUBLISHED_EPOCH) / 86400 ))
-        
+
         if [ "$DAYS_AGO" -lt 30 ]; then
             add_action "Check release $tag (published $DAYS_AGO days ago)"
             echo -e "   ${YELLOW}URL:${NC} $url"
@@ -146,21 +146,21 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 check_recent_commits() {
     local repo_dir=$1
     local repo_name=$2
-    
+
     if [ ! -d "$repo_dir" ]; then
         return
     fi
-    
+
     cd "$repo_dir" 2>/dev/null || return
-    
+
     if git remote | grep -q "upstream"; then
         git fetch upstream --quiet 2>/dev/null || true
         UPSTREAM=$(git rev-parse upstream/main 2>/dev/null || git rev-parse upstream/master 2>/dev/null || echo "")
         LOCAL=$(git rev-parse @ 2>/dev/null)
-        
+
         if [ -n "$UPSTREAM" ] && [ "$LOCAL" != "$UPSTREAM" ]; then
             BEHIND=$(git rev-list --count HEAD..upstream/main 2>/dev/null || git rev-list --count HEAD..upstream/master 2>/dev/null || echo "0")
-            
+
             if [ "$BEHIND" -gt 0 ] && [ "$BEHIND" -lt 20 ]; then
                 echo -e "${GREEN}$repo_name: $BEHIND new commit(s) in upstream${NC}"
                 git log --oneline HEAD..upstream/main 2>/dev/null | head -5 | sed 's/^/   /' || git log --oneline HEAD..upstream/master 2>/dev/null | head -5 | sed 's/^/   /' || true
@@ -191,4 +191,3 @@ else
 fi
 
 echo ""
-

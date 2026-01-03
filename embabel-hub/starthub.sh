@@ -40,4 +40,3 @@ else
     echo "✗ Failed to start embabel-hub container"
     exit 1
 fi
-

@@ -23,7 +23,7 @@ cd "$LEARN_DIR"
 # Check if pre-commit is installed
 if ! command -v pre-commit &> /dev/null; then
     echo -e "${YELLOW}pre-commit not found. Installing...${NC}"
-    
+
     # Try pip3 first, then pip
     if command -v pip3 &> /dev/null; then
         pip3 install pre-commit
@@ -43,7 +43,7 @@ echo -e "${GREEN}✓ pre-commit installed${NC}\n"
 # Check if GitGuardian CLI is installed
 if ! command -v ggshield &> /dev/null; then
     echo -e "${YELLOW}GitGuardian CLI (ggshield) not found. Installing...${NC}"
-    
+
     if command -v pip3 &> /dev/null; then
         pip3 install ggshield
     elif command -v pip &> /dev/null; then
@@ -96,4 +96,3 @@ echo -e "  ${CYAN}ggshield scan${NC}                - Manual GitGuardian scan"
 echo -e "  ${CYAN}ggshield auth status${NC}        - Check GitGuardian auth\n"
 
 echo -e "${GREEN}✓ Pre-commit and GitGuardian are ready!${NC}\n"
-

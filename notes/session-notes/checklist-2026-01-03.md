@@ -57,34 +57,34 @@
 ## 📝 Daily Activities
 
 **What I did today:**
-- 
+-
 
 **What I learned:**
-- 
+-
 
 **Questions/Blockers:**
-- 
+-
 
 **Files I explored:**
-- 
+-
 
 **PRs I reviewed:**
-- 
+-
 
 ## ✅ Progress Summary
 
 **Completed today:**
-- 
+-
 
 **Still working on:**
-- 
+-
 
 **Next session focus:**
-- 
+-
 
 ## 💡 Notes & Insights
 
-- 
+-
 
 ---
 

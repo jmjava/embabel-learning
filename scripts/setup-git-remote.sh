@@ -28,7 +28,7 @@ if [ -n "$1" ]; then
 else
     # Try to get from git config or GitHub CLI
     GITHUB_USER=$(git config user.name 2>/dev/null || gh api user --jq .login 2>/dev/null || echo "")
-    
+
     if [ -z "$GITHUB_USER" ]; then
         echo -e "${YELLOW}Enter your GitHub username:${NC}"
         read -r GITHUB_USER
@@ -62,7 +62,7 @@ if git remote | grep -q "origin"; then
     echo -e "${YELLOW}⚠️  Remote 'origin' already exists:${NC}"
     echo -e "   $CURRENT_URL"
     echo ""
-    
+
     if [[ "$CURRENT_URL" == *"embabel/"* ]] && [[ "$CURRENT_URL" != *"jmjava"* ]]; then
         echo -e "${RED}✗ SAFETY: Current remote points to embabel organization!${NC}"
         echo -e "${YELLOW}This is blocked for safety.${NC}"
@@ -124,4 +124,3 @@ echo ""
 echo -e "  3. Push safely with checks:"
 echo -e "     ${GREEN}epush${NC}"
 echo ""
-

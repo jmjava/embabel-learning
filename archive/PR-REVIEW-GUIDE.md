@@ -344,4 +344,3 @@ When you run `check-sync-status.sh`, you'll see:
 ---
 
 **Remember:** Always check sync status before reviewing PRs, and refresh your IDE after git operations!
-

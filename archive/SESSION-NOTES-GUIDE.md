@@ -293,4 +293,3 @@ cat notes/session-notes/catch-up-2026-01-03.md
 ---
 
 **Happy learning!** 🚀
-

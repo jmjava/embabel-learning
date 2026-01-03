@@ -54,9 +54,9 @@ while IFS= read -r repo_json; do
     repo_name=$(echo "$repo_json" | jq -r '.name')
     stars=$(echo "$repo_json" | jq -r '.stargazerCount')
     description=$(echo "$repo_json" | jq -r '.description // "No description"')
-    
+
     TOTAL=$((TOTAL + 1))
-    
+
     # Check if forked
     if echo "$FORKED_REPOS" | grep -q "^${repo_name}$"; then
         forked="${GREEN}✓${NC}"
@@ -64,12 +64,12 @@ while IFS= read -r repo_json; do
     else
         forked="${GRAY}○${NC}"
     fi
-    
+
     # Check if cloned
     if [ -d "$BASE_DIR/$repo_name" ]; then
         cloned="${GREEN}✓${NC}"
         CLONED_COUNT=$((CLONED_COUNT + 1))
-        
+
         # Check if upstream is configured
         cd "$BASE_DIR/$repo_name"
         if git remote | grep -q "^upstream$"; then
@@ -82,9 +82,9 @@ while IFS= read -r repo_json; do
         cloned="${GRAY}○${NC}"
         upstream="${GRAY}○${NC}"
     fi
-    
+
     printf "%-30s %-8s %-8s %-10s %s\n" "$repo_name" "$forked" "$cloned" "$upstream" "⭐ $stars"
-    
+
 done <<< "$ALL_REPOS"
 
 echo ""
@@ -133,4 +133,3 @@ echo "$ALL_REPOS" | jq -r '[.] | sort_by(-.stargazerCount) | .[:5] | .[] | "\(.n
 
 echo ""
 echo -e "${GREEN}✓ Done!${NC}"
-

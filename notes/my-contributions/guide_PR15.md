@@ -654,7 +654,7 @@ index beaaed2..ac02b08 100644
 +#
 +# Multi-stage build so `docker compose up --build` works from a fresh clone.
 +#
- 
+
 +FROM maven:3.9.9-eclipse-temurin-21 AS build
 +WORKDIR /workspace
 +
@@ -665,12 +665,12 @@ index beaaed2..ac02b08 100644
 +
 +FROM eclipse-temurin:21-jre-jammy AS runtime
  WORKDIR /app
- 
+
 -# Copy the pre-built jar from local target directory
 -# Build the JAR locally first with: mvn clean package -DskipTests
 -COPY target/*.jar app.jar
 +COPY --from=build /workspace/target/*.jar /app/app.jar
- 
+
 -# Expose the application port
  EXPOSE 1337
 -
@@ -682,9 +682,9 @@ index ad2c932..dc898c7 100644
 --- a/README.md
 +++ b/README.md
 @@ -103,6 +103,48 @@ Start via `claude --debug` to see more logging.
- 
+
  See [Claude Code MCP documentation](https://code.claude.com/docs/en/mcp) for further information.
- 
+
 +### Consuming MCP Tools With Cursor
 +
 +#### 1) Ensure the MCP server is running
@@ -728,12 +728,12 @@ index ad2c932..dc898c7 100644
 +![Cursor Installed MCP Servers](images/cursor-mcp-installed-servers.svg)
 +
  #### Auto-Approving Embabel MCP Tools
- 
+
  By default, Claude Code asks for confirmation before running MCP tools. When you accept a tool with "Yes, don't ask
 @@ -249,16 +291,79 @@ client.activate();
- 
+
  ## Docker
- 
+
 -Run with Docker Compose:
 +### Start (Docker Compose)
 +
@@ -799,14 +799,14 @@ index ad2c932..dc898c7 100644
 +```
 +
 +#### Stop
- 
+
  ```bash
 -docker compose up
 +docker compose down --remove-orphans
  ```
- 
+
  ### Environment Variables
- 
+
  | Variable         | Default                        | Description            |
 -|------------------|--------------------------------|------------------------|
 +| ---------------- | ------------------------------ | ---------------------- |
@@ -815,7 +815,7 @@ index ad2c932..dc898c7 100644
  | `NEO4J_PASSWORD` | `brahmsian`                    | Neo4j password         |
 @@ -268,9 +373,72 @@ docker compose up
  Example:
- 
+
  ```bash
 -NEO4J_PASSWORD=mysecretpassword OPENAI_API_KEY=sk-... docker compose up
 +NEO4J_PASSWORD=mysecretpassword OPENAI_API_KEY=sk-... GUIDE_PORT=1338 docker compose up --build -d
@@ -876,7 +876,7 @@ index ad2c932..dc898c7 100644
 +```bash
 +./mvnw test
  ```
- 
+
 +All 38 tests should pass, including:
 +
 +- Hub API controller tests
@@ -885,7 +885,7 @@ index ad2c932..dc898c7 100644
 +- **MCP Security regression tests** (verifies `/sse` and `/mcp` endpoints are not blocked by Spring Security)
 +
  ## Miscellaneous
- 
+
  Sometimes (for example if your IDE crashes) you will be left with an orphaned server process and won't be able to
 @@ -280,5 +448,3 @@ To kill the server:
  ```aiignore
@@ -899,7 +899,7 @@ index be26232..8cc722e 100644
 +++ b/compose.yaml
 @@ -26,6 +26,8 @@ services:
        - embabel-network
- 
+
    neo4j-init:
 +    profiles:
 +      - init
@@ -917,7 +917,7 @@ index be26232..8cc722e 100644
        - NEO4J_HOST=neo4j
 @@ -62,6 +64,8 @@ services:
      restart: unless-stopped
- 
+
    frontend:
 +    profiles:
 +      - frontend
@@ -987,13 +987,13 @@ index cb816fe..2494f56 100644
  import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 +import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 +import org.springframework.security.web.util.matcher.OrRequestMatcher
- 
+
  @Configuration
  @EnableWebSecurity
 @@ -22,6 +26,27 @@ class SecurityConfig(
          "/mcp/**",
      )
- 
+
 +    private val mcpMatchers = arrayOf(
 +        AntPathRequestMatcher("/sse"),
 +        AntPathRequestMatcher("/sse/**"),
@@ -1020,7 +1020,7 @@ index cb816fe..2494f56 100644
          "/app/**",
 @@ -33,12 +58,28 @@ class SecurityConfig(
      ) + mcpPatterns
- 
+
      @Bean
 +    @Order(0)
 +    fun mcpFilterChain(http: HttpSecurity): SecurityFilterChain {
@@ -1065,7 +1065,7 @@ index d01ba4d..3c02581 100644
           */
 -        const val USE_LOCAL_NEO4J = false
 +        private val USE_LOCAL_NEO4J: Boolean = System.getenv("USE_LOCAL_NEO4J")?.toBoolean() ?: false
- 
+
          private const val LOCAL_NEO4J_URL = "bolt://localhost:7687"
          private const val LOCAL_NEO4J_USERNAME = "neo4j"
 diff --git a/src/test/kotlin/com/embabel/guide/TestApplicationContext.kt b/src/test/kotlin/com/embabel/guide/TestApplicationContext.kt
@@ -1074,18 +1074,18 @@ index d9bab8b..cce775b 100644
 +++ b/src/test/kotlin/com/embabel/guide/TestApplicationContext.kt
 @@ -46,12 +46,12 @@ class Neo4jPropertiesInitializer : ApplicationContextInitializer<ConfigurableApp
      }
- 
+
      override fun initialize(applicationContext: ConfigurableApplicationContext) {
 -        // Check Neo4jTestContainer.USE_LOCAL_NEO4J constant to determine whether to use local Neo4j
 -        val useLocalNeo4j = Neo4jTestContainer.USE_LOCAL_NEO4J
 +        // Check USE_LOCAL_NEO4J environment variable to determine whether to use local Neo4j
 +        val useLocalNeo4j = Neo4jTestContainer.useLocalNeo4j()
- 
+
          val activeProfiles = applicationContext.environment.activeProfiles
- 
+
 -        println("@@@ Neo4jPropertiesInitializer.initialize() CALLED! useLocalNeo4j=$useLocalNeo4j (from Neo4jTestContainer.USE_LOCAL_NEO4J), activeProfiles=${activeProfiles.joinToString(",")} @@@")
 +        println("@@@ Neo4jPropertiesInitializer.initialize() CALLED! useLocalNeo4j=$useLocalNeo4j (from USE_LOCAL_NEO4J env var), activeProfiles=${activeProfiles.joinToString(",")} @@@")
- 
+
          val properties = if (useLocalNeo4j) {
              println("@@@ Using local Neo4j at $LOCAL_NEO4J_URI @@@")
 diff --git a/src/test/kotlin/com/embabel/guide/chat/security/McpSecurityTest.kt b/src/test/kotlin/com/embabel/guide/chat/security/McpSecurityTest.kt
@@ -1176,7 +1176,7 @@ index 1845f4e..48237f7 100644
  # - true: Use local Neo4j (faster, requires Neo4j running on localhost:7687)
 -# - false: Use TestContainers (slower startup, but fully isolated)
 +# - false (default): Use TestContainers (slower startup, but fully isolated)
- 
+
  # Logging configuration for tests
  logging:
 ```
