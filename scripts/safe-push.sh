@@ -71,7 +71,7 @@ if command -v ggshield &> /dev/null; then
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${BLUE}Step 2: GitGuardian Scan${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
-    
+
     # Note: GitGuardian already ran in pre-commit hooks above
     # This is just a reminder that security checks passed
     echo -e "${GREEN}✓ GitGuardian scan passed (via pre-commit hooks)${NC}\n"
