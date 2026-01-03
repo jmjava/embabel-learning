@@ -29,9 +29,6 @@ repos:
         args: [--fix=lf]
       - id: detect-private-key
       - id: detect-aws-credentials
-      - id: detect-secrets
-        args: ['--baseline', '.secrets.baseline']
-        exclude: ^(.*/)?(secrets.baseline|\.secrets\.baseline)$
 
   # Shell script linting
   - repo: https://github.com/shellcheck-py/shellcheck-py
@@ -53,4 +50,12 @@ repos:
     hooks:
       - id: yamllint
         args: [-c=.yamllint.yml]
+
+  # detect-secrets (separate repo)
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: ^(.*/)?(secrets.baseline|\.secrets\.baseline)$
 
