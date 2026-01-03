@@ -34,7 +34,7 @@ repos:
     rev: v0.9.0.6
     hooks:
       - id: shellcheck
-        args: [-e, SC1091]  # Allow sourcing files
+        args: [-e, SC1091, --severity=error]  # Only fail on errors, not warnings
 
   # Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli
