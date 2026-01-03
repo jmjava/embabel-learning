@@ -1,8 +1,13 @@
 #!/bin/bash
-# Sync your fork with upstream changes
+# Sync your fork with upstream changes (READ-ONLY from embabel)
 # Usage: ./sync-upstream.sh [guide|agent|all]
+# 
+# SAFETY: This script only PULLS from embabel, never PUSHES to it
 
 set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/safety-checks.sh"
 
 GUIDE_DIR="$HOME/github/jmjava/guide"
 AGENT_DIR="$HOME/github/jmjava/embabel-agent"
@@ -33,6 +38,19 @@ sync_repo() {
     # Get current branch
     local current_branch=$(git rev-parse --abbrev-ref HEAD)
     echo "Current branch: $current_branch"
+
+    # SAFETY: Block if origin points to embabel (should point to jmjava fork)
+    local origin_url=$(git remote get-url origin 2>/dev/null || echo "")
+    if [[ "$origin_url" == *"embabel/"* ]] && [[ "$origin_url" != *"jmjava"* ]]; then
+        echo -e "${RED}✗ SAFETY BLOCK: 'origin' remote points to embabel organization${NC}"
+        echo -e "${YELLOW}Remote URL: $origin_url${NC}"
+        echo -e "${YELLOW}This script is for syncing YOUR FORK, not embabel directly${NC}"
+        echo ""
+        echo -e "${GREEN}To fix:${NC}"
+        echo -e "  git remote set-url origin git@github.com:jmjava/$repo_name.git"
+        echo ""
+        return 1
+    fi
 
     # Check for uncommitted changes
     if ! git diff-index --quiet HEAD --; then
@@ -72,12 +90,8 @@ sync_repo() {
                 echo -e "${YELLOW}Using safe push (with security checks)...${NC}"
                 "$HOME/github/jmjava/embabel-learning/scripts/safe-push.sh" "$current_branch" origin
             else
-                # Safety check before direct push
-                REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
-                if [[ "$REMOTE_URL" == *"embabel/"* ]] && [[ "$REMOTE_URL" != *"jmjava"* ]]; then
-                    echo -e "${RED}✗ SAFETY BLOCK: Cannot push to embabel organization${NC}"
-                    echo -e "${YELLOW}Remote URL: $REMOTE_URL${NC}"
-                    echo -e "${YELLOW}Make sure your 'origin' remote points to YOUR fork (jmjava/...), not embabel/${NC}"
+                # Safety check before direct push (using safety-checks.sh)
+                if ! block_embabel_push origin; then
                     return 1
                 fi
                 git push origin "$current_branch"

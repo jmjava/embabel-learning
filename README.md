@@ -415,6 +415,59 @@ cd ~/github/jmjava/embabel-learning/notes
 echo "# Understanding embabel-agent architecture" > architecture.md
 ```
 
+## 🛡️ Safety: No Commits to Embabel Organization
+
+**CRITICAL SAFETY FEATURE:** This workspace is configured to **PREVENT** any commits or pushes to embabel organization repositories.
+
+### What's Protected
+
+✅ **Automatic blocking** of:
+
+- Commits when `origin` points to embabel
+- Pushes to embabel organization
+- Accidental modifications to embabel repos
+
+✅ **Allowed operations:**
+
+- Reading embabel repos
+- Syncing FROM embabel (pull/merge)
+- Committing to YOUR forks (jmjava/...)
+- Pushing to YOUR forks
+
+### How It Works
+
+1. **Git Hooks** - Installed automatically to block commits/pushes
+2. **Script Safety Checks** - All scripts check before operations
+3. **Remote Validation** - Verifies `origin` points to your fork
+
+### Contributing to Embabel
+
+To contribute to embabel projects:
+
+1. **Work on your fork:**
+
+   ```bash
+   # Make sure origin points to YOUR fork
+   git remote set-url origin git@github.com:jmjava/REPO_NAME.git
+   ```
+
+2. **Make changes and commit:**
+
+   ```bash
+   git add .
+   git commit -m "Your changes"
+   epush  # Safe push with checks
+   ```
+
+3. **Create PR from your fork:**
+   ```bash
+   gh pr create --repo embabel/REPO_NAME
+   ```
+
+**Never commit directly to embabel repos - always work through your fork!**
+
+---
+
 ## 🔒 Security & Pre-commit Hooks
 
 This repository includes **GitGuardian** secret scanning and **pre-commit** hooks to ensure code quality and security.
