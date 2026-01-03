@@ -73,7 +73,7 @@ if command -v ggshield &> /dev/null; then
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
 
     # Scan the entire repository
-    if ! ggshield scan; then
+    if ! ggshield scan path .; then
         echo -e "${RED}✗ GitGuardian scan found secrets or issues${NC}"
         echo -e "${YELLOW}Review the output above and fix any issues before pushing${NC}"
         exit 1
