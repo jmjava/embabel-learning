@@ -8,7 +8,6 @@ repos:
     hooks:
       - id: ggshield
         language_version: python3
-        args: ['scan', '--verbose']
 
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
