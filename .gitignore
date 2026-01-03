@@ -37,3 +37,9 @@ scratch/
 
 # Personal notes (if you want to keep some private)
 notes/private/
+
+# Environment files (may contain secrets)
+embabel-hub/.env
+*.env
+.env.local
+.env.*.local
