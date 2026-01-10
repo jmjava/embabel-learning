@@ -1,11 +1,13 @@
 #!/bin/bash
-# Get comprehensive summary of all embabel repositories
+# Get comprehensive summary of all upstream organization repositories
 # Usage: ./get-embabel-summary.sh [repo-name] or all [--no-color]
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BASE_DIR="$HOME/github/jmjava"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 # Check for no-color flag
 NO_COLOR=false
@@ -27,7 +29,7 @@ fi
 get_repo_summary() {
     local repo_name=$1
     local repo_dir="$BASE_DIR/$repo_name"
-    local upstream_repo="embabel/$repo_name"
+    local upstream_repo="${UPSTREAM_ORG}/$repo_name"
     
     if [ ! -d "$repo_dir" ]; then
         echo "⚠️  $repo_name: Not cloned locally"

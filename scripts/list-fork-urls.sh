@@ -4,7 +4,10 @@
 
 set -e
 
-BASE_DIR="$HOME/github/jmjava"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -34,8 +37,8 @@ for repo_dir in "$BASE_DIR"/*/; do
         continue
     fi
 
-    # Check if it's a fork (points to jmjava)
-    if [[ "$origin_url" == *"jmjava"* ]]; then
+    # Check if it's a fork (points to your GitHub username)
+    if [[ "$origin_url" == *"${YOUR_GITHUB_USER}"* ]]; then
         FORK_COUNT=$((FORK_COUNT + 1))
         
         # Get upstream URL if configured
