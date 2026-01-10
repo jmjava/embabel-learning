@@ -1,11 +1,13 @@
 #!/bin/bash
-# Setup git remote for embabel-learning repo
+# Setup git remote for learning workspace repo
 # Usage: ./setup-git-remote.sh [your-github-username]
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LEARN_DIR="$(dirname "$SCRIPT_DIR")"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 # Colors
 GREEN='\033[0;32m'
@@ -14,7 +16,7 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-cd "$LEARN_DIR"
+cd "$LEARNING_DIR"
 
 if [ ! -d .git ]; then
     echo -e "${RED}Error: Not a git repository${NC}"
@@ -26,8 +28,8 @@ fi
 if [ -n "$1" ]; then
     GITHUB_USER="$1"
 else
-    # Try to get from git config or GitHub CLI
-    GITHUB_USER=$(git config user.name 2>/dev/null || gh api user --jq .login 2>/dev/null || echo "")
+    # Try to get from config, git config, or GitHub CLI
+    GITHUB_USER="${YOUR_GITHUB_USER:-$(git config user.name 2>/dev/null || gh api user --jq .login 2>/dev/null || echo "")}"
 
     if [ -z "$GITHUB_USER" ]; then
         echo -e "${YELLOW}Enter your GitHub username:${NC}"
@@ -44,7 +46,7 @@ else
     fi
 fi
 
-REPO_NAME="embabel-learning"
+REPO_NAME=$(basename "$LEARNING_DIR")
 REMOTE_URL="git@github.com:$GITHUB_USER/$REPO_NAME.git"
 
 echo -e "${GREEN}========================================${NC}"
@@ -63,8 +65,8 @@ if git remote | grep -q "origin"; then
     echo -e "   $CURRENT_URL"
     echo ""
 
-    if [[ "$CURRENT_URL" == *"embabel/"* ]] && [[ "$CURRENT_URL" != *"jmjava"* ]]; then
-        echo -e "${RED}✗ SAFETY: Current remote points to embabel organization!${NC}"
+    if [[ "$CURRENT_URL" == *"${UPSTREAM_ORG}/"* ]] && [[ "$CURRENT_URL" != *"${YOUR_GITHUB_USER}"* ]]; then
+        echo -e "${RED}✗ SAFETY: Current remote points to ${UPSTREAM_ORG} organization!${NC}"
         echo -e "${YELLOW}This is blocked for safety.${NC}"
         echo ""
         echo -e "${YELLOW}Update remote? (y/n)${NC}"
@@ -114,12 +116,12 @@ echo ""
 echo -e "${BLUE}Next Steps:${NC}"
 echo -e "  1. Create the repository on GitHub:"
 echo -e "     ${CYAN}Visit: https://github.com/new${NC}"
-echo -e "     ${CYAN}Name: embabel-learning${NC}"
+echo -e "     ${CYAN}Name: $REPO_NAME${NC}"
 echo -e "     ${CYAN}Don't initialize with README (we already have one)${NC}"
 echo ""
 echo -e "  2. Add and commit your files:"
 echo -e "     ${GREEN}git add .${NC}"
-echo -e "     ${GREEN}git commit -m 'Initial commit: Embabel learning workspace'${NC}"
+echo -e "     ${GREEN}git commit -m 'Initial commit: ${UPSTREAM_ORG} learning workspace'${NC}"
 echo ""
 echo -e "  3. Push safely with checks:"
 echo -e "     ${GREEN}epush${NC}"
