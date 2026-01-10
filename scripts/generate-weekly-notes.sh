@@ -4,9 +4,12 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LEARN_DIR="$(dirname "$SCRIPT_DIR")"
-SESSION_NOTES_DIR="$LEARN_DIR/notes/session-notes"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
+
+SESSION_NOTES_DIR="$LEARNING_DIR/notes/session-notes"
 TEMPLATE="$SESSION_NOTES_DIR/template-weekly-notes.md"
 
 # Colors
@@ -54,23 +57,25 @@ OPEN_PRS=$(mktemp)
 echo "## 🔍 Open PRs to Review" > "$OPEN_PRS"
 echo "" >> "$OPEN_PRS"
 
-# Check embabel-agent PRs
-if gh pr list --repo embabel/embabel-agent --state open --limit 10 --json number,title,author,createdAt 2>/dev/null | jq -r '.[] | "| \(.number) | embabel-agent | \(.title) | OPEN | \(.author.login) - \(.createdAt) |"' >> "$OPEN_PRS" 2>/dev/null; then
-    echo "  ✓ Found PRs in embabel-agent"
+# Check PRs from all configured repos
+# Determine which repos to check
+if [ -n "$MONITOR_REPOS" ]; then
+    REPOS_TO_CHECK="$MONITOR_REPOS"
+else
+    REPOS_TO_CHECK=$(gh repo list "$UPSTREAM_ORG" --limit 100 --json name --jq '.[].name' 2>/dev/null | head -10 | tr '\n' ' ')
+    REPOS_TO_CHECK=$(echo "$REPOS_TO_CHECK" | xargs)
 fi
 
-# Check guide PRs
-if gh pr list --repo embabel/guide --state open --limit 10 --json number,title,author,createdAt 2>/dev/null | jq -r '.[] | "| \(.number) | guide | \(.title) | OPEN | \(.author.login) - \(.createdAt) |"' >> "$OPEN_PRS" 2>/dev/null; then
-    echo "  ✓ Found PRs in guide"
-fi
+for repo_name in $REPOS_TO_CHECK; do
+    if gh pr list --repo "${UPSTREAM_ORG}/$repo_name" --state open --limit 10 --json number,title,author,createdAt 2>/dev/null | jq -r ".[] | \"| \(.number) | $repo_name | \(.title) | OPEN | \(.author.login) - \(.createdAt) |\"" >> "$OPEN_PRS" 2>/dev/null; then
+        echo "  ✓ Found PRs in $repo_name"
+    fi
+done
 
 # Get repos that need syncing
 SYNC_ITEMS=$(mktemp)
 echo "## 🔄 Repos Needing Sync" > "$SYNC_ITEMS"
 echo "" >> "$SYNC_ITEMS"
-
-GUIDE_DIR="$HOME/github/jmjava/guide"
-AGENT_DIR="$HOME/github/jmjava/embabel-agent"
 
 check_repo_sync() {
     local repo_dir=$1
@@ -101,17 +106,25 @@ check_repo_sync() {
     fi
 }
 
-check_repo_sync "$GUIDE_DIR" "guide"
-check_repo_sync "$AGENT_DIR" "embabel-agent"
+# Check all configured repos
+for repo_name in $REPOS_TO_CHECK; do
+    repo_dir="$BASE_DIR/$repo_name"
+    if [ -d "$repo_dir" ] && [ -d "$repo_dir/.git" ]; then
+        check_repo_sync "$repo_dir" "$repo_name"
+    fi
+done
 
 # Get recent releases
 RELEASES=$(mktemp)
 echo "## 🏷️  Recent Releases to Check" > "$RELEASES"
 echo "" >> "$RELEASES"
 
-if gh release list --repo embabel/embabel-agent --limit 3 --json tagName,publishedAt 2>/dev/null | jq -r '.[] | "- **\(.tagName)** - Published: \(.publishedAt)"' >> "$RELEASES" 2>/dev/null; then
-    echo "  ✓ Found recent releases"
-fi
+# Check releases from all configured repos
+for repo_name in $REPOS_TO_CHECK; do
+    if gh release list --repo "${UPSTREAM_ORG}/$repo_name" --limit 3 --json tagName,publishedAt 2>/dev/null | jq -r ".[] | \"- **\(.tagName)** in $repo_name - Published: \(.publishedAt)\"" >> "$RELEASES" 2>/dev/null; then
+        echo "  ✓ Found recent releases in $repo_name"
+    fi
+done
 
 # Generate the weekly notes file
 cat > "$OUTPUT_FILE" << EOF
@@ -123,10 +136,10 @@ cat > "$OUTPUT_FILE" << EOF
 
 ## 🎯 Goals for This Week
 
-- [ ] Review open PRs in embabel repos
+- [ ] Review open PRs in ${UPSTREAM_ORG} repos
 - [ ] Sync repositories with upstream
 - [ ] Explore recent changes and releases
-- [ ] Continue learning embabel architecture
+- [ ] Continue learning ${UPSTREAM_ORG} architecture
 
 ## 📝 Daily Activities
 
@@ -224,8 +237,10 @@ $(cat "$OPEN_PRS")
 
 | PR # | Repo | Title | Status | Notes |
 | ---- | ---- | ----- | ------ | ----- |
-$(gh pr list --repo embabel/embabel-agent --state open --limit 10 --json number,title,author,createdAt 2>/dev/null | jq -r '.[] | "| \(.number) | embabel-agent | \(.title) | OPEN | \(.author.login) |"' || echo "")
-$(gh pr list --repo embabel/guide --state open --limit 10 --json number,title,author,createdAt 2>/dev/null | jq -r '.[] | "| \(.number) | guide | \(.title) | OPEN | \(.author.login) |"' || echo "")
+$(for repo_name in $REPOS_TO_CHECK; do
+    gh pr list --repo "${UPSTREAM_ORG}/$repo_name" --state open --limit 10 --json number,title,author,createdAt 2>/dev/null | \
+    jq -r ".[] | \"| \(.number) | $repo_name | \(.title) | OPEN | \(.author.login) |\"" || echo ""
+done)
 
 $(cat "$RELEASES")
 
