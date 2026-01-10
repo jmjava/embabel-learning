@@ -35,54 +35,69 @@ for test_file in "${TEST_FILES[@]}"; do
     fi
     
     # Make executable
-    chmod +x "$test_file"
+    chmod +x "$test_file" 2>/dev/null
     
-    # Source test framework for each test file
-    source "$TEST_FRAMEWORK"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BLUE}Running: $(basename "$test_file")${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
     
-    # Reset counters before running this test file
-    resetCounters
+    # Run tests in a subshell and capture output with test counts
+    # Use grep to extract actual test results from output
+    test_output=$(bash "$test_file" 2>&1)
+    test_exit_code=$?
     
-    # Extract test functions and run them
-    # Use a subshell to avoid variable pollution
-    (
-        source "$TEST_FRAMEWORK"
-        source "$test_file"
-        
-        # Get test functions from the file
-        test_functions=$(grep -E '^test[A-Za-z_][A-Za-z0-9_]*\(' "$test_file" | sed 's/(.*$//' | sort)
-        
-        echo -e "${BLUE}Running tests from: $(basename "$test_file")${NC}"
-        echo ""
-        
-        # Run each test function
-        for test_func in $test_functions; do
-            # Check if function exists
-            if ! type "$test_func" >/dev/null 2>&1; then
-                continue
-            fi
-            
-            echo -e "${YELLOW}Running: $test_func${NC}"
-            setUp
-            "$test_func" || true  # Continue even if test fails
-            tearDown
-            echo ""
-        done
-        
-        # Print summary for this file
-        printSummary >&1
-    )
+    # Display the test output
+    echo "$test_output"
     
-    # Aggregate results (these are in the parent shell's scope)
-    TOTAL_TESTS=$((TOTAL_TESTS + TEST_COUNT))
-    TOTAL_PASSED=$((TOTAL_PASSED + PASSED_COUNT))
-    TOTAL_FAILED=$((TOTAL_FAILED + FAILED_COUNT))
+    # Extract counts from the test output
+    # Strip ANSI color codes, then find the FIRST summary (before any duplicates)
+    clean_output=$(echo "$test_output" | sed 's/\x1b\[[0-9;]*m//g')
     
-    # Check if any tests failed
-    if [ $FAILED_COUNT -gt 0 ]; then
+    # Find the summary section (between "Test Summary" headers)
+    summary_section=$(echo "$clean_output" | sed -n '/Test Summary/,/Test Summary/p' | head -10)
+    
+    # Extract numbers from summary section
+    file_tests=$(echo "$summary_section" | grep "Total tests:" | head -1 | grep -oE '[0-9]+' | head -1 || echo "0")
+    file_passed=$(echo "$summary_section" | grep "^Passed:" | head -1 | grep -oE '[0-9]+' | head -1 || echo "0")
+    file_failed=$(echo "$summary_section" | grep "^Failed:" | head -1 | grep -oE '[0-9]+' | head -1 || echo "0")
+    
+    # Fallback: if no summary found, count test results directly from output
+    if [ "$file_tests" = "0" ] && [ -n "$test_output" ]; then
+        # Count actual test runs (lines with "Running: test")
+        file_tests=$(echo "$test_output" | grep -c "Running: test" || echo "0")
+        # Count passed (green checkmarks)
+        file_passed=$(echo "$test_output" | grep -c "✓" || echo "0")
+        # Count failed (red X marks)
+        file_failed=$(echo "$test_output" | grep -c "✗" || echo "0")
+    fi
+    
+    # Final safety check - ensure we have valid numbers
+    file_tests=${file_tests:-0}
+    file_passed=${file_passed:-0}
+    file_failed=${file_failed:-0}
+    
+    # Convert to base 10 explicitly
+    file_tests=$((10#$file_tests))
+    file_passed=$((10#$file_passed))
+    file_failed=$((10#$file_failed))
+    
+    # Aggregate results
+    TOTAL_TESTS=$((TOTAL_TESTS + file_tests))
+    TOTAL_PASSED=$((TOTAL_PASSED + file_passed))
+    TOTAL_FAILED=$((TOTAL_FAILED + file_failed))
+    
+    # Check if any tests failed for this file
+    if [ "$file_failed" -gt 0 ]; then
         FAILED_FILES+=("$test_file")
     fi
     
+    # Print file summary
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BLUE}File Summary: $(basename "$test_file")${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "Tests:  $file_tests | ${GREEN}Passed: $file_passed${NC} | ${RED}Failed: $file_failed${NC}"
+    echo ""
     echo ""
 done
 
@@ -105,6 +120,11 @@ if [ $TOTAL_FAILED -gt 0 ]; then
     exit 1
 else
     echo -e "${GREEN}Failed:      0${NC}"
-    echo -e "${GREEN}All tests passed!${NC}"
-    exit 0
+    if [ $TOTAL_TESTS -gt 0 ]; then
+        echo -e "${GREEN}All tests passed! ✓${NC}"
+        exit 0
+    else
+        echo -e "${RED}⚠️  ERROR: No tests were executed!${NC}"
+        exit 1
+    fi
 fi
