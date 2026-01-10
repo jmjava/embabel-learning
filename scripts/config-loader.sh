@@ -13,12 +13,51 @@ if [ -z "$LEARNING_DIR" ]; then
     LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
 fi
 
-# Load configuration file if it exists
+# Load .env file if it exists (takes precedence over config.sh)
+ENV_FILE="$LEARNING_DIR/.env"
+if [ -f "$ENV_FILE" ]; then
+    # Export variables from .env file (handle comments, empty lines, and variable expansion)
+    set -a  # Automatically export all variables
+    # Parse .env file line by line
+    while IFS= read -r line || [ -n "$line" ]; do
+        # Skip comments and empty lines
+        [[ "$line" =~ ^[[:space:]]*# ]] && continue
+        [[ -z "${line// }" ]] && continue
+        
+        # Split on first = sign
+        if [[ "$line" == *"="* ]]; then
+            key="${line%%=*}"
+            value="${line#*=}"
+            
+            # Remove leading/trailing whitespace from key and value
+            key=$(echo "$key" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            value=$(echo "$value" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            
+            # Remove surrounding quotes if present
+            if [[ "$value" =~ ^\"(.*)\"$ ]] || [[ "$value" =~ ^\'(.*)\'$ ]]; then
+                value="${value:1:-1}"
+            fi
+            
+            # Expand variables in value (e.g., $HOME, ${YOUR_GITHUB_USER})
+            value=$(eval "echo \"$value\"")
+            
+            # Export the variable
+            [ -n "$key" ] && export "$key=$value" 2>/dev/null || true
+        fi
+    done < "$ENV_FILE"
+    set +a  # Disable auto-export
+    USING_CONFIG=true
+fi
+
+# Load config.sh if it exists and .env wasn't loaded (backward compatibility)
 CONFIG_FILE="$LEARNING_DIR/config.sh"
-if [ -f "$CONFIG_FILE" ]; then
+if [ -z "$USING_CONFIG" ] && [ -f "$CONFIG_FILE" ]; then
     source "$CONFIG_FILE"
     USING_CONFIG=true
-else
+fi
+
+# If neither .env nor config.sh found, use defaults
+if [ "${USING_CONFIG:-false}" != "true" ]; then
     USING_CONFIG=false
     # Set defaults for backward compatibility
     YOUR_GITHUB_USER="${YOUR_GITHUB_USER:-jmjava}"
@@ -31,9 +70,11 @@ else
     
     # Show warning once per script execution
     if [ "${CONFIG_WARNING_SHOWN:-false}" != "true" ]; then
-        echo "⚠️  Warning: config.sh not found. Using defaults (${UPSTREAM_ORG}/${YOUR_GITHUB_USER})" >&2
-        echo "   Create config.sh from config.sh.example to customize:" >&2
-        echo "   cp $LEARNING_DIR/config.sh.example $CONFIG_FILE" >&2
+        echo "⚠️  Warning: No configuration file found (.env or config.sh)" >&2
+        echo "   Using defaults (${UPSTREAM_ORG}/${YOUR_GITHUB_USER})" >&2
+        echo "   Create .env from .env-template to customize:" >&2
+        echo "   cp $LEARNING_DIR/.env-template $ENV_FILE" >&2
+        echo "   # Or use config.sh: cp $LEARNING_DIR/config.sh.example $CONFIG_FILE" >&2
         export CONFIG_WARNING_SHOWN=true
     fi
 fi

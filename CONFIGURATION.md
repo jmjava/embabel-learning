@@ -2,7 +2,44 @@
 
 This workspace is now **generic** and can work with any GitHub organization! This guide explains how to configure it for your use.
 
+## Configuration Methods
+
+The scripts support two configuration methods (in order of precedence):
+
+1. **`.env` file** (recommended) - Environment variable style configuration
+2. **`config.sh` file** - Bash script style configuration (backward compatibility)
+
+Both methods are supported, but `.env` is recommended for consistency with modern practices and Spring Boot applications.
+
 ## Quick Start
+
+### Option 1: Using .env File (Recommended)
+
+1. **Copy the template:**
+   ```bash
+   cp .env-template .env
+   ```
+
+2. **Edit `.env` with your settings:**
+   ```bash
+   nano .env  # or use your preferred editor
+   ```
+
+3. **That's it!** The `.env` file is automatically loaded by all scripts.
+
+**Example `.env` file:**
+```bash
+YOUR_GITHUB_USER=your-username
+UPSTREAM_ORG=embabel
+BASE_DIR=$HOME/github/your-username
+MONITOR_REPOS=guide embabel-agent dice
+WORKSPACE_NAME=embabel-workspace
+MAX_MONITOR_REPOS=10
+```
+
+> **Note:** The `.env` file is git-ignored and should never be committed. It contains user-specific settings.
+
+### Option 2: Using config.sh File (Backward Compatibility)
 
 1. **Copy the example configuration:**
    ```bash

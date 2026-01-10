@@ -8,22 +8,34 @@ Your central hub for learning, monitoring, and contributing to any GitHub organi
 
 **First-time setup:** This workspace is now generic and works with any GitHub organization!
 
+### Option 1: Using .env File (Recommended)
+
 1. **Copy and configure:**
    ```bash
-   cp config.sh.example config.sh
-   # Edit config.sh with your settings:
+   cp .env-template .env
+   # Edit .env with your settings:
    # - YOUR_GITHUB_USER: Your GitHub username
    # - UPSTREAM_ORG: The organization you want to monitor
-   # - BASE_DIR: Where you clone repositories (default: ~/github/YOUR_GITHUB_USER)
+   # - BASE_DIR: Where you clone repositories (default: $HOME/github/YOUR_GITHUB_USER)
    # - MONITOR_REPOS: Optional - specific repos to monitor (space-separated)
    ```
 
-2. **The workspace will use these defaults if `config.sh` is missing:**
+### Option 2: Using config.sh File (Backward Compatibility)
+
+1. **Copy and configure:**
+   ```bash
+   cp config.sh.example config.sh
+   # Edit config.sh with your settings (same variables as .env)
+   ```
+
+2. **The workspace will use these defaults if neither `.env` nor `config.sh` is found:**
    - `UPSTREAM_ORG=embabel`
    - `YOUR_GITHUB_USER=jmjava`
    - `BASE_DIR=~/github/jmjava`
 
-   > **Note:** A warning will be shown when using defaults. Create `config.sh` to customize.
+   > **Note:** A warning will be shown when using defaults. Create `.env` or `config.sh` to customize.
+
+> **Important:** The `.env` file is git-ignored and should never be committed. It contains user-specific settings.
 
 See [CONFIGURATION.md](CONFIGURATION.md) for detailed configuration options.
 
@@ -50,8 +62,9 @@ See [CONFIGURATION.md](CONFIGURATION.md) for detailed configuration options.
 ```bash
 # 1. Configure for your organization (REQUIRED for first-time setup)
 cd /path/to/organization-learning  # or clone this repo
-cp config.sh.example config.sh
-# Edit config.sh with YOUR_GITHUB_USER and UPSTREAM_ORG
+cp .env-template .env  # Recommended: use .env file
+# Or: cp config.sh.example config.sh  # Alternative: use config.sh
+# Edit .env (or config.sh) with YOUR_GITHUB_USER and UPSTREAM_ORG
 
 # 2. Set up convenient aliases
 source scripts/setup-aliases.sh
@@ -76,7 +89,7 @@ scripts/setup-upstreams.sh
 em
 ```
 
-> **Configuration required:** Make sure to create `config.sh` from `config.sh.example` before running the scripts. See [CONFIGURATION.md](CONFIGURATION.md) for details.
+> **Configuration required:** Make sure to create `.env` from `.env-template` (or `config.sh` from `config.sh.example`) before running the scripts. See [CONFIGURATION.md](CONFIGURATION.md) for details.
 
 ## 📁 Project Structure
 
