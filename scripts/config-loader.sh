@@ -23,24 +23,24 @@ if [ -f "$ENV_FILE" ]; then
         # Skip comments and empty lines
         [[ "$line" =~ ^[[:space:]]*# ]] && continue
         [[ -z "${line// }" ]] && continue
-        
+
         # Split on first = sign
         if [[ "$line" == *"="* ]]; then
             key="${line%%=*}"
             value="${line#*=}"
-            
+
             # Remove leading/trailing whitespace from key and value
             key=$(echo "$key" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
             value=$(echo "$value" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-            
+
             # Remove surrounding quotes if present
             if [[ "$value" =~ ^\"(.*)\"$ ]] || [[ "$value" =~ ^\'(.*)\'$ ]]; then
                 value="${value:1:-1}"
             fi
-            
+
             # Expand variables in value (e.g., $HOME, ${YOUR_GITHUB_USER})
             value=$(eval "echo \"$value\"")
-            
+
             # Export the variable
             [ -n "$key" ] && export "$key=$value" 2>/dev/null || true
         fi
@@ -67,7 +67,7 @@ if [ "${USING_CONFIG:-false}" != "true" ]; then
     MONITOR_REPOS="${MONITOR_REPOS:-}"
     WORKSPACE_NAME="${WORKSPACE_NAME:-${UPSTREAM_ORG}-workspace}"
     MAX_MONITOR_REPOS="${MAX_MONITOR_REPOS:-10}"
-    
+
     # Show warning once per script execution
     if [ "${CONFIG_WARNING_SHOWN:-false}" != "true" ]; then
         echo "⚠️  Warning: No configuration file found (.env or config.sh)" >&2
@@ -101,4 +101,3 @@ if [ -z "$YOUR_GITHUB_USER" ] || [ -z "$UPSTREAM_ORG" ]; then
     echo "Error: YOUR_GITHUB_USER and UPSTREAM_ORG must be set" >&2
     exit 1
 fi
-

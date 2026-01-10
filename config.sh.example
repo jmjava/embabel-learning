@@ -35,4 +35,3 @@ export WORKSPACE_NAME="${UPSTREAM_ORG}-workspace"
 # Optional: Maximum number of repos to auto-detect for monitoring
 # If MONITOR_REPOS is empty, this limits how many repos will be monitored
 export MAX_MONITOR_REPOS=10
-

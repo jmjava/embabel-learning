@@ -16,7 +16,7 @@ ALIAS_SECTION_HEADER="# ${UPSTREAM_ORG} Project Monitoring Aliases"
 if [ -f "$ALIAS_FILE" ]; then
     # Create a temp file without the aliases section
     TEMP_FILE=$(mktemp)
-    
+
     # Remove lines from the section header to the last alias (gfetch)
     awk -v header="$ALIAS_SECTION_HEADER" '
         $0 == header { skip=1; next }
@@ -24,10 +24,10 @@ if [ -f "$ALIAS_FILE" ]; then
         skip { next }
         { print }
     ' "$ALIAS_FILE" > "$TEMP_FILE"
-    
+
     # Replace original file
     mv "$TEMP_FILE" "$ALIAS_FILE"
-    
+
     # Remove trailing blank lines
     sed -i -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$ALIAS_FILE" 2>/dev/null || true
 fi

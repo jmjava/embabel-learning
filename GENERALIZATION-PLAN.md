@@ -178,7 +178,7 @@ The following files in `archive/` contain personal references but are less criti
 
 **Current**: Contains personal notes and contributions
 
-**Action**: 
+**Action**:
 - Keep as-is (these are personal)
 - Consider adding to `.gitignore` or moving to a separate repo
 - Or create template structure: `notes/templates/` vs `notes/personal/`
@@ -409,4 +409,3 @@ efork    # Fork them
 eclone   # Clone your forks
 em       # Monitor daily
 ```
-

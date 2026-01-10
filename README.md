@@ -602,25 +602,34 @@ This automatically:
 - ✅ Shows what will be pushed
 - ✅ Confirms before pushing
 
-**Automatic (on commit):**
+**Automatic (on commit and push):**
 
 ```bash
+# On commit:
 git commit -m "Your message"
 # Pre-commit hooks run automatically:
 # 1. GitGuardian secret scanning (ggshield)
 # 2. Safety checks (block-upstream-commit)
 # 3. All other hooks (linting, formatting, etc.)
+
+# On push:
+git push
+# Pre-push hooks run automatically:
+# 1. GitGuardian secret scanning (ggshield) - Extra security check
+# 2. Safety checks (block-upstream-push) - Prevents pushes to upstream org
+# 3. All other pre-push hooks
 ```
 
-**Important:** All commits automatically run:
-- ✅ **GitGuardian secret scanning** - Scans for secrets before commit
-- ✅ **Safety checks** - Prevents commits to upstream org repos (uses `UPSTREAM_ORG` from `.env`)
+**Important:** All commits AND pushes automatically run:
+- ✅ **GitGuardian secret scanning** - Scans for secrets before commit AND push
+- ✅ **Safety checks** - Prevents commits/pushes to upstream org repos (uses `UPSTREAM_ORG` from `.env`)
 - ✅ **All other hooks** - Linting, formatting, file checks
 
-If any hook fails, the commit is blocked. This ensures:
-- No secrets are committed
-- No accidental commits to upstream org repos
+If any hook fails, the commit/push is blocked. This ensures:
+- No secrets are committed or pushed
+- No accidental commits/pushes to upstream org repos
 - Code quality standards are maintained
+- Double protection: secrets checked on both commit and push
 
 **Manual:**
 
@@ -721,8 +730,9 @@ brew install python3
 
 | Check               | What It Does                        | When It Runs             |
 | ------------------- | ----------------------------------- | ------------------------ |
-| GitGuardian         | Scans for secrets, API keys, tokens | Every commit             |
+| GitGuardian         | Scans for secrets, API keys, tokens | Every commit AND push    |
 | Safety Checks       | Prevents commits to upstream org    | Every commit             |
+| Safety Checks (Push)| Prevents pushes to upstream org     | Every push               |
 | detect-secrets      | Additional secret patterns          | Every commit             |
 | shellcheck          | Shell script linting                | On `.sh` files           |
 | yamllint            | YAML validation                     | On `.yaml`, `.yml` files |

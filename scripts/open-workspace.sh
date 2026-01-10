@@ -17,7 +17,7 @@ if [ ! -f "$WORKSPACE_FILE" ]; then
     {
         echo "{"
         echo "    \"folders\": ["
-        
+
         # Add configured repos
         if [ -n "$MONITOR_REPOS" ]; then
             for repo in $MONITOR_REPOS; do
@@ -37,14 +37,14 @@ if [ ! -f "$WORKSPACE_FILE" ]; then
             echo "            \"name\": \"🤖 ${UPSTREAM_ORG} Agent\""
             echo "        },"
         fi
-        
+
         # Add learning workspace itself
         WORKSPACE_DIR_NAME=$(basename "$LEARNING_DIR")
         echo "        {"
         echo "            \"path\": \"$WORKSPACE_DIR_NAME\","
         echo "            \"name\": \"🎓 ${UPSTREAM_ORG} Learning\""
         echo "        }"
-        
+
         echo "    ],"
         echo "    \"settings\": {"
         echo "        \"gitlens.defaultDateFormat\": \"YYYY-MM-DD HH:mm\","
@@ -55,7 +55,7 @@ if [ ! -f "$WORKSPACE_FILE" ]; then
         echo "    }"
         echo "}"
     } > "$WORKSPACE_FILE"
-    
+
     echo "✅ Workspace file created!"
 fi
 

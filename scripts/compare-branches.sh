@@ -84,13 +84,13 @@ if [ "$REPO_ARG" = "all" ]; then
             tr '\n' ' ')
         REPOS_TO_COMPARE=$(echo "$REPOS_TO_COMPARE" | xargs)  # Trim whitespace
     fi
-    
+
     if [ -z "$REPOS_TO_COMPARE" ]; then
         echo -e "${RED}❌ No repositories found to compare${NC}"
         echo "Set MONITOR_REPOS in config.sh or specify a repo name"
         exit 1
     fi
-    
+
     for repo_name in $REPOS_TO_COMPARE; do
         repo_dir="$BASE_DIR/$repo_name"
         if [ -d "$repo_dir" ] && [ -d "$repo_dir/.git" ]; then
@@ -102,11 +102,11 @@ else
     # Compare specific repo
     repo_name="$REPO_ARG"
     repo_dir="$BASE_DIR/$repo_name"
-    
+
     if [ ! -d "$repo_dir" ] || [ ! -d "$repo_dir/.git" ]; then
         echo -e "${RED}❌ Repository not found: $repo_dir${NC}"
         exit 1
     fi
-    
+
     compare_repo "$repo_dir" "$repo_name"
 fi

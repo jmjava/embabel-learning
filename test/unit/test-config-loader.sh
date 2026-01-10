@@ -17,11 +17,11 @@ setUp() {
     # Create test directory structure
     mkdir -p "$SCRIPTS_DIR"
     mkdir -p "$(dirname "$CONFIG_EXAMPLE")"
-    
+
     # Copy config-loader.sh to test location (use absolute path)
     local actual_scripts_dir="$(cd "$SCRIPT_DIR/../../scripts" && pwd)"
     cp "$actual_scripts_dir/config-loader.sh" "$SCRIPTS_DIR/"
-    
+
     # Unset all config variables
     unset YOUR_GITHUB_USER
     unset UPSTREAM_ORG
@@ -31,7 +31,7 @@ setUp() {
     unset WORKSPACE_NAME
     unset USING_CONFIG
     unset CONFIG_WARNING_SHOWN
-    
+
     # Set LEARNING_DIR for config-loader
     export LEARNING_DIR="$TEST_ROOT"
 }
@@ -60,7 +60,7 @@ testConfigLoaderWithDefaults() {
         echo \"BASE=\$BASE_DIR\"
         echo \"USING=\$USING_CONFIG\"
     ")
-    
+
     assertContains "$output" "jmjava" "Default YOUR_GITHUB_USER should be jmjava"
     assertContains "$output" "embabel" "Default UPSTREAM_ORG should be embabel"
     assertContains "$output" "USING=false" "Should indicate not using config file"
@@ -75,7 +75,7 @@ UPSTREAM_ORG="testorg"
 BASE_DIR="/custom/path"
 MONITOR_REPOS="repo1 repo2 repo3"
 EOF
-    
+
     local output=$(bash -c "
         export LEARNING_DIR='$LEARNING_DIR'
         export CONFIG_WARNING_SHOWN=false
@@ -86,7 +86,7 @@ EOF
         echo \"MONITOR=\$MONITOR_REPOS\"
         echo \"USING=\$USING_CONFIG\"
     ")
-    
+
     assertContains "$output" "USER=testuser" "Should load YOUR_GITHUB_USER from config"
     assertContains "$output" "ORG=testorg" "Should load UPSTREAM_ORG from config"
     assertContains "$output" "BASE=/custom/path" "Should load BASE_DIR from config"
@@ -102,7 +102,7 @@ testConfigLoaderExportsVariables() {
         source '$SCRIPTS_DIR/config-loader.sh' >/dev/null 2>&1
         [ -n \"\$YOUR_GITHUB_USER\" ] && [ -n \"\$UPSTREAM_ORG\" ] && exit 0 || exit 1
     " >/dev/null 2>&1
-    
+
     assertTrue "Variables should be exported" [ $? -eq 0 ]
 }
 
@@ -113,7 +113,7 @@ testConfigLoaderValidatesRequiredVariables() {
 #!/bin/bash
 # Empty config file - variables should fall back to defaults
 EOF
-    
+
     # Config-loader.sh sources the file, but if variables are empty after sourcing,
     # it should use defaults. However, since the file exists, it sets USING_CONFIG=true
     # Let's test with a config that explicitly sets empty values, then validates
@@ -125,7 +125,7 @@ EOF
         echo \"USER=\${YOUR_GITHUB_USER:-NOT_SET}\"
         echo \"ORG=\${UPSTREAM_ORG:-NOT_SET}\"
     " 2>&1)
-    
+
     # The config file exists but is empty, so variables won't be set
     # Config-loader will validate and fail if variables are empty
     # Actually, looking at config-loader.sh, if config.sh exists and sources empty values,
@@ -143,13 +143,13 @@ testConfigLoaderWarningMessage() {
     # Test that warning is shown when neither .env nor config.sh is missing
     # Ensure config files don't exist in test directory
     rm -f "$LEARNING_DIR/.env" "$LEARNING_DIR/config.sh" 2>/dev/null || true
-    
+
     local output=$(bash -c "
         export LEARNING_DIR='$LEARNING_DIR'
         unset CONFIG_WARNING_SHOWN
         source '$SCRIPTS_DIR/config-loader.sh' 2>&1
     ")
-    
+
     # Updated warning message mentions both .env and config.sh
     assertContains "$output" "No configuration file found" "Should warn when config files are missing"
     assertContains "$output" "Using defaults" "Should mention using defaults"
@@ -159,14 +159,14 @@ testConfigLoaderNoDuplicateWarnings() {
     # Test that warning is only shown once
     # Ensure config files don't exist
     rm -f "$LEARNING_DIR/.env" "$LEARNING_DIR/config.sh" 2>/dev/null || true
-    
+
     local output=$(bash -c "
         export LEARNING_DIR='$LEARNING_DIR'
         export CONFIG_WARNING_SHOWN=false
         source '$SCRIPTS_DIR/config-loader.sh' >/dev/null 2>&1
         source '$SCRIPTS_DIR/config-loader.sh' 2>&1
     " | grep -c "No configuration file found")
-    
+
     # Should only see warning once (first time)
     assertTrue "Warning should only appear once per execution" [ "$output" -le 1 ]
 }
@@ -176,4 +176,3 @@ if [ "${0##*/}" = "test-config-loader.sh" ] && [ "${RUNNING_TESTS:-false}" != "t
     resetCounters
     runTests "$0"
 fi
-

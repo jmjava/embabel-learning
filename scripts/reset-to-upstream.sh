@@ -145,13 +145,13 @@ if [ "$REPO_ARG" = "all" ]; then
             tr '\n' ' ')
         REPOS_TO_RESET=$(echo "$REPOS_TO_RESET" | xargs)  # Trim whitespace
     fi
-    
+
     if [ -z "$REPOS_TO_RESET" ]; then
         echo -e "${RED}❌ No repositories found to reset${NC}"
         echo "Set MONITOR_REPOS in config.sh or specify a repo name"
         exit 1
     fi
-    
+
     for repo_name in $REPOS_TO_RESET; do
         repo_dir="$BASE_DIR/$repo_name"
         if [ -d "$repo_dir" ] && [ -d "$repo_dir/.git" ]; then
@@ -163,14 +163,13 @@ else
     # Reset specific repo
     repo_name="$REPO_ARG"
     repo_dir="$BASE_DIR/$repo_name"
-    
+
     if [ ! -d "$repo_dir" ] || [ ! -d "$repo_dir/.git" ]; then
         echo -e "${RED}❌ Repository not found: $repo_dir${NC}"
         exit 1
     fi
-    
+
     reset_repo "$repo_dir" "$repo_name"
 fi
 
 echo -e "${GREEN}✓ Reset complete!${NC}"
-

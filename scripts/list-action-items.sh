@@ -101,7 +101,7 @@ TOTAL_PR_COUNT=0
 for repo_name in $REPOS_TO_CHECK; do
     REPO_PRS=$(gh pr list --repo "${UPSTREAM_ORG}/$repo_name" --state open --limit 20 --json number,title,author,createdAt,url 2>/dev/null || echo "[]")
     REPO_PR_COUNT=$(echo "$REPO_PRS" | jq '. | length' 2>/dev/null || echo "0")
-    
+
     if [ "$REPO_PR_COUNT" -gt 0 ]; then
         echo -e "${GREEN}$repo_name: $REPO_PR_COUNT open PR(s)${NC}\n"
         echo "$REPO_PRS" | jq -r '.[] | "\(.number)|\(.title)|\(.author.login)|\(.createdAt)|\(.url)"' 2>/dev/null | while IFS='|' read -r num title author created url; do
@@ -127,14 +127,14 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 for repo_name in $REPOS_TO_CHECK; do
     REPO_RELEASES=$(gh release list --repo "${UPSTREAM_ORG}/$repo_name" --limit 3 --json tagName,publishedAt,url 2>/dev/null || echo "[]")
     REPO_RELEASE_COUNT=$(echo "$REPO_RELEASES" | jq '. | length' 2>/dev/null || echo "0")
-    
+
     if [ "$REPO_RELEASE_COUNT" -gt 0 ]; then
         echo "$REPO_RELEASES" | jq -r '.[] | "\(.tagName)|\(.publishedAt)|\(.url)"' 2>/dev/null | while IFS='|' read -r tag published url; do
             # Check if release is recent (within last 30 days)
             PUBLISHED_EPOCH=$(date -d "$published" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$published" +%s 2>/dev/null || echo "0")
             NOW_EPOCH=$(date +%s)
             DAYS_AGO=$(( (NOW_EPOCH - PUBLISHED_EPOCH) / 86400 ))
-            
+
             if [ "$DAYS_AGO" -lt 30 ]; then
                 add_action "Check release $tag in $repo_name (published $DAYS_AGO days ago)"
                 echo -e "   ${YELLOW}URL:${NC} $url"

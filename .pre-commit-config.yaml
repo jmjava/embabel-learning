@@ -2,12 +2,13 @@
 # See https://pre-commit.com for more information
 
 repos:
-  # GitGuardian - Secret scanning
+  # GitGuardian - Secret scanning (runs on both commit and push)
   - repo: https://github.com/GitGuardian/ggshield
     rev: v1.25.0
     hooks:
       - id: ggshield
         language_version: python3
+        stages: [pre-commit, pre-push]  # Run on both commit and push for extra security
 
   # Local safety checks - Prevent commits to upstream organization repos
   - repo: local
@@ -19,6 +20,13 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
+      - id: block-upstream-push
+        name: Block pushes to upstream organization
+        entry: scripts/block-upstream-push-hook.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
 
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks

@@ -24,7 +24,7 @@ assertTrue() {
     local message="$1"
     shift
     TEST_COUNT=$((TEST_COUNT + 1))
-    
+
     if "$@" >/dev/null 2>&1; then
         PASSED_COUNT=$((PASSED_COUNT + 1))
         echo -e "${GREEN}✓${NC} $message"
@@ -41,7 +41,7 @@ assertFalse() {
     local message="$1"
     shift
     TEST_COUNT=$((TEST_COUNT + 1))
-    
+
     if ! "$@" >/dev/null 2>&1; then
         PASSED_COUNT=$((PASSED_COUNT + 1))
         echo -e "${GREEN}✓${NC} $message"
@@ -59,7 +59,7 @@ assertEquals() {
     local actual="$2"
     local message="${3:-Values should be equal}"
     TEST_COUNT=$((TEST_COUNT + 1))
-    
+
     if [ "$expected" = "$actual" ]; then
         PASSED_COUNT=$((PASSED_COUNT + 1))
         echo -e "${GREEN}✓${NC} $message"
@@ -79,7 +79,7 @@ assertNotEquals() {
     local actual="$2"
     local message="${3:-Values should not be equal}"
     TEST_COUNT=$((TEST_COUNT + 1))
-    
+
     if [ "$expected" != "$actual" ]; then
         PASSED_COUNT=$((PASSED_COUNT + 1))
         echo -e "${GREEN}✓${NC} $message"
@@ -97,7 +97,7 @@ assertContains() {
     local needle="$2"
     local message="${3:-String should contain substring}"
     TEST_COUNT=$((TEST_COUNT + 1))
-    
+
     if echo "$haystack" | grep -q "$needle"; then
         PASSED_COUNT=$((PASSED_COUNT + 1))
         echo -e "${GREEN}✓${NC} $message"
@@ -115,7 +115,7 @@ assertNotContains() {
     local needle="$2"
     local message="${3:-String should not contain substring}"
     TEST_COUNT=$((TEST_COUNT + 1))
-    
+
     if ! echo "$haystack" | grep -q "$needle"; then
         PASSED_COUNT=$((PASSED_COUNT + 1))
         echo -e "${GREEN}✓${NC} $message"
@@ -132,7 +132,7 @@ assertFileExists() {
     local file="$1"
     local message="${2:-File should exist}"
     TEST_COUNT=$((TEST_COUNT + 1))
-    
+
     if [ -f "$file" ]; then
         PASSED_COUNT=$((PASSED_COUNT + 1))
         echo -e "${GREEN}✓${NC} $message"
@@ -149,7 +149,7 @@ assertFileNotExists() {
     local file="$1"
     local message="${2:-File should not exist}"
     TEST_COUNT=$((TEST_COUNT + 1))
-    
+
     if [ ! -f "$file" ]; then
         PASSED_COUNT=$((PASSED_COUNT + 1))
         echo -e "${GREEN}✓${NC} $message"
@@ -166,7 +166,7 @@ assertDirectoryExists() {
     local dir="$1"
     local message="${2:-Directory should exist}"
     TEST_COUNT=$((TEST_COUNT + 1))
-    
+
     if [ -d "$dir" ]; then
         PASSED_COUNT=$((PASSED_COUNT + 1))
         echo -e "${GREEN}✓${NC} $message"
@@ -182,45 +182,45 @@ assertDirectoryExists() {
 # Test runner
 runTests() {
     local test_file="$1"
-    
+
     if [ ! -f "$test_file" ]; then
         echo -e "${RED}Error: Test file not found: $test_file${NC}" >&2
         return 1
     fi
-    
+
     echo -e "${BLUE}Running tests from: $(basename "$test_file")${NC}"
     echo ""
-    
+
     # Prevent infinite recursion by checking if we're already running tests
     if [ "${RUNNING_TESTS:-false}" = "true" ]; then
         return 0
     fi
-    
+
     export RUNNING_TESTS=true
-    
+
     # Extract test functions before sourcing (to avoid recursion)
     local test_functions=$(grep -E '^test[A-Za-z_][A-Za-z0-9_]*\(' "$test_file" | sed 's/(.*$//' | sort)
-    
+
     # Reset counters for this test file
     local file_test_count=0
     local file_passed=0
     local file_failed=0
-    
+
     # Source the test file in a subshell to avoid variable pollution
     (
         # Source test framework again to get fresh counters in subshell
         source "$TEST_FRAMEWORK" 2>/dev/null || true
-        
+
         # Source the actual test file
         source "$test_file"
-        
+
         # Run all test functions
         for test_func in $test_functions; do
             # Check if function exists
             if ! type "$test_func" >/dev/null 2>&1; then
                 continue
             fi
-            
+
             echo -e "${YELLOW}Running: $test_func${NC}"
             setUp
             "$test_func" || true  # Continue even if test fails
@@ -228,9 +228,9 @@ runTests() {
             echo ""
         done
     )
-    
+
     unset RUNNING_TESTS
-    
+
     # Note: The counters are updated by assertion functions which run in the subshell
     # The parent shell still has the original counters, which is what we want
 }
@@ -242,7 +242,7 @@ printSummary() {
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "Total tests:  $TEST_COUNT"
     echo -e "${GREEN}Passed:      $PASSED_COUNT${NC}"
-    
+
     if [ $FAILED_COUNT -gt 0 ]; then
         echo -e "${RED}Failed:      $FAILED_COUNT${NC}"
         echo ""
@@ -273,4 +273,3 @@ cleanup() {
 
 # Trap to run cleanup on exit
 trap cleanup EXIT
-

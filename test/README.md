@@ -185,4 +185,3 @@ The test framework (`test-framework.sh`) provides:
 - **Error handling** - Proper exit codes for CI/CD
 
 No external dependencies - just pure bash!
-

@@ -77,7 +77,7 @@ fi
 for repo_name in $REPOS_TO_CHECK; do
     REPO_PRS=$(gh pr list --repo "${UPSTREAM_ORG}/$repo_name" --author "$GITHUB_USER" --state all --limit 10 --json number,title,state,createdAt,url 2>/dev/null || echo "[]")
     REPO_PR_COUNT=$(echo "$REPO_PRS" | jq '. | length' 2>/dev/null || echo "0")
-    
+
     if [ "$REPO_PR_COUNT" -gt 0 ]; then
         echo "**$repo_name:**" >> "$CONTRIBUTIONS"
         echo "$REPO_PRS" | jq -r '.[] | "1. **PR #\(.number)** (\(.state)) - \(.title) (MERGED/OPEN \(.createdAt))"' >> "$CONTRIBUTIONS" 2>/dev/null || true

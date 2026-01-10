@@ -393,4 +393,3 @@ export MONITOR_REPOS="spring-boot spring-framework"
 - Check [README.md](README.md) for usage examples
 - See [docs/EMBABEL-WORKFLOW.md](docs/EMBABEL-WORKFLOW.md) for detailed workflows
 - Review script source code - they all load `config-loader.sh` at the top
-

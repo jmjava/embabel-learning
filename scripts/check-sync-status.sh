@@ -174,13 +174,13 @@ if [ "$REPO_ARG" = "all" ]; then
             tr '\n' ' ')
         REPOS_TO_CHECK=$(echo "$REPOS_TO_CHECK" | xargs)  # Trim whitespace
     fi
-    
+
     if [ -z "$REPOS_TO_CHECK" ]; then
         echo -e "${RED}❌ No repositories found to check${NC}"
         echo "Set MONITOR_REPOS in config.sh or specify a repo name"
         exit 1
     fi
-    
+
     for repo_name in $REPOS_TO_CHECK; do
         repo_dir="$BASE_DIR/$repo_name"
         if [ -d "$repo_dir" ] && [ -d "$repo_dir/.git" ]; then
@@ -192,12 +192,12 @@ else
     # Check specific repo
     repo_name="$REPO_ARG"
     repo_dir="$BASE_DIR/$repo_name"
-    
+
     if [ ! -d "$repo_dir" ] || [ ! -d "$repo_dir/.git" ]; then
         echo -e "${RED}❌ Repository not found: $repo_dir${NC}"
         exit 1
     fi
-    
+
     check_repo "$repo_dir" "$repo_name"
 fi
 

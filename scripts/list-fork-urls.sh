@@ -32,7 +32,7 @@ for repo_dir in "$BASE_DIR"/*/; do
 
     # Get origin URL
     origin_url=$(git remote get-url origin 2>/dev/null || echo "")
-    
+
     if [ -z "$origin_url" ]; then
         continue
     fi
@@ -40,23 +40,23 @@ for repo_dir in "$BASE_DIR"/*/; do
     # Check if it's a fork (points to your GitHub username)
     if [[ "$origin_url" == *"${YOUR_GITHUB_USER}"* ]]; then
         FORK_COUNT=$((FORK_COUNT + 1))
-        
+
         # Get upstream URL if configured
         upstream_url=$(git remote get-url upstream 2>/dev/null || echo "")
-        
+
         echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         echo -e "${CYAN}📦 $repo_name${NC}"
         echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         echo -e "${GREEN}Your Fork (origin):${NC}"
         echo -e "  $origin_url"
-        
+
         if [ -n "$upstream_url" ]; then
             echo -e "${YELLOW}Upstream:${NC}"
             echo -e "  $upstream_url"
         else
             echo -e "${YELLOW}Upstream:${NC} Not configured"
         fi
-        
+
         # Get current branch
         current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
         echo -e "${CYAN}Current branch:${NC} $current_branch"
@@ -76,4 +76,3 @@ if [ "$NO_FORK_COUNT" -gt 0 ]; then
     echo -e "${YELLOW}⚠️  Not your forks: $NO_FORK_COUNT${NC}"
 fi
 echo ""
-

@@ -87,4 +87,3 @@ Failed:       <number>
 ## ✅ Confirmed: Tests are running correctly!
 
 The test framework is functional. All tests execute and results are tracked. Some tests need fixes (particularly safety-checks tests), but the framework itself is working.
-

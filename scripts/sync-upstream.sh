@@ -134,13 +134,13 @@ if [ "$REPO_ARG" = "all" ]; then
             tr '\n' ' ')
         REPOS_TO_SYNC=$(echo "$REPOS_TO_SYNC" | xargs)  # Trim whitespace
     fi
-    
+
     if [ -z "$REPOS_TO_SYNC" ]; then
         echo -e "${RED}❌ No repositories found to sync${NC}"
         echo "Set MONITOR_REPOS in config.sh or specify a repo name"
         exit 1
     fi
-    
+
     SYNC_COUNT=0
     for repo_name in $REPOS_TO_SYNC; do
         repo_dir="$BASE_DIR/$repo_name"
@@ -152,7 +152,7 @@ if [ "$REPO_ARG" = "all" ]; then
         fi
         echo ""
     done
-    
+
     if [ $SYNC_COUNT -eq 0 ]; then
         echo -e "${YELLOW}⚠️  No repositories were synced${NC}"
     fi
@@ -160,13 +160,13 @@ else
     # Sync specific repo
     repo_name="$REPO_ARG"
     repo_dir="$BASE_DIR/$repo_name"
-    
+
     if [ ! -d "$repo_dir" ] || [ ! -d "$repo_dir/.git" ]; then
         echo -e "${RED}❌ Repository not found: $repo_dir${NC}"
         echo "Make sure the repository is cloned to $BASE_DIR"
         exit 1
     fi
-    
+
     sync_repo "$repo_dir" "$repo_name"
 fi
 

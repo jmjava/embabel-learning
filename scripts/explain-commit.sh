@@ -152,4 +152,3 @@ echo ""
 echo -e "${GRAY}Show specific file:${NC}"
 echo -e "  git show $COMMIT_HASH -- <file_path>"
 echo ""
-
