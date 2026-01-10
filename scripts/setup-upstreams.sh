@@ -1,8 +1,13 @@
 #!/bin/bash
-# Set up upstream remotes for all cloned embabel repos
-# This allows you to track changes from the original embabel repositories
+# Set up upstream remotes for all cloned upstream organization repos
+# This allows you to track changes from the original organization repositories
 
 set -e
+
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -10,16 +15,12 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-YOUR_USER="jmjava"
-EMBABEL_ORG="embabel"
-BASE_DIR="$HOME/github/jmjava"
-
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}Upstream Remote Setup Manager${NC}"
 echo -e "${GREEN}========================================${NC}\n"
 
-# Find all cloned embabel repos
-echo -e "${YELLOW}📋 Finding cloned embabel repositories...${NC}"
+# Find all cloned upstream org repos
+echo -e "${YELLOW}📋 Finding cloned ${UPSTREAM_ORG} repositories...${NC}"
 CLONED_REPOS=()
 
 for dir in "$BASE_DIR"/*/; do
@@ -27,20 +28,20 @@ for dir in "$BASE_DIR"/*/; do
         repo_name=$(basename "$dir")
         cd "$dir"
 
-        # Check if it's a fork of embabel
-        if gh repo view "$YOUR_USER/$repo_name" --json parent --jq '.parent.owner.login' 2>/dev/null | grep -q "$EMBABEL_ORG"; then
+        # Check if it's a fork of upstream org
+        if gh repo view "$YOUR_GITHUB_USER/$repo_name" --json parent --jq '.parent.owner.login' 2>/dev/null | grep -q "$UPSTREAM_ORG"; then
             CLONED_REPOS+=("$repo_name")
         fi
     fi
 done
 
 if [ ${#CLONED_REPOS[@]} -eq 0 ]; then
-    echo -e "${RED}❌ No cloned embabel repositories found${NC}"
-    echo "Run ./clone-embabel-repos.sh first"
+    echo -e "${RED}❌ No cloned ${UPSTREAM_ORG} repositories found${NC}"
+    echo "Run $SCRIPT_DIR/clone-embabel-repos.sh first"
     exit 1
 fi
 
-echo -e "${GREEN}✓ Found ${#CLONED_REPOS[@]} cloned embabel repositories${NC}\n"
+echo -e "${GREEN}✓ Found ${#CLONED_REPOS[@]} cloned ${UPSTREAM_ORG} repositories${NC}\n"
 
 # Set up upstreams
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -59,7 +60,7 @@ for repo in "${CLONED_REPOS[@]}"; do
     # Check if upstream already exists
     if git remote | grep -q "^upstream$"; then
         CURRENT_UPSTREAM=$(git remote get-url upstream 2>/dev/null || echo "")
-        EXPECTED_UPSTREAM="git@github.com:$EMBABEL_ORG/$repo.git"
+        EXPECTED_UPSTREAM="git@github.com:${UPSTREAM_ORG}/$repo.git"
 
         if [ "$CURRENT_UPSTREAM" = "$EXPECTED_UPSTREAM" ]; then
             echo -e "${BLUE}⊝ Upstream already configured correctly${NC}"
@@ -74,7 +75,7 @@ for repo in "${CLONED_REPOS[@]}"; do
         fi
     else
         # Add upstream
-        if git remote add upstream "git@github.com:$EMBABEL_ORG/$repo.git"; then
+        if git remote add upstream "git@github.com:${UPSTREAM_ORG}/$repo.git"; then
             echo -e "${GREEN}✓ Added upstream remote${NC}"
             CONFIGURED=$((CONFIGURED + 1))
         else
@@ -110,13 +111,13 @@ echo -e "${BLUE}Next Steps:${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo "1. Monitor all repositories:"
-echo "   ./monitor-embabel.sh"
+echo "   $SCRIPT_DIR/monitor-embabel.sh"
 echo ""
 echo "2. Sync a specific repository with upstream:"
-echo "   ./sync-upstream.sh guide"
+echo "   $SCRIPT_DIR/sync-upstream.sh <repo-name>"
 echo ""
 echo "3. Compare your changes with upstream:"
-echo "   ./compare-branches.sh all"
+echo "   $SCRIPT_DIR/compare-branches.sh all"
 echo ""
 
 echo -e "${GREEN}✓ Done!${NC}"
