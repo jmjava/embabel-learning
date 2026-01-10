@@ -4,6 +4,9 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEST_FRAMEWORK="$SCRIPT_DIR/helpers/test-framework.sh"
 
+# Set TEST_MODE so config-loader.sh can use TEST_UPSTREAM_ORG if set
+export TEST_MODE=true
+
 # Colors
 BLUE='\033[0;34m'
 GREEN='\033[0;32m'

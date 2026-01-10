@@ -79,6 +79,12 @@ if [ "${USING_CONFIG:-false}" != "true" ]; then
     fi
 fi
 
+# Handle test organization override
+# If TEST_UPSTREAM_ORG is set and we're in a test context, use it instead
+if [ -n "${TEST_UPSTREAM_ORG:-}" ] && [ "${TEST_MODE:-false}" = "true" ]; then
+    UPSTREAM_ORG="$TEST_UPSTREAM_ORG"
+fi
+
 # Export all variables for use in scripts
 export YOUR_GITHUB_USER
 export UPSTREAM_ORG
@@ -88,6 +94,7 @@ export MONITOR_REPOS
 export WORKSPACE_NAME
 export MAX_MONITOR_REPOS
 export USING_CONFIG
+export TEST_UPSTREAM_ORG
 
 # Validate required variables
 if [ -z "$YOUR_GITHUB_USER" ] || [ -z "$UPSTREAM_ORG" ]; then

@@ -136,21 +136,16 @@ The GitHub organization whose repositories you want to **monitor and learn from*
 - If you want to monitor Embabel's repos: `UPSTREAM_ORG="embabel"` (even if your username is different)
 - If you want to monitor Spring Framework: `UPSTREAM_ORG="spring-projects"` (even if your username is different)
 
-**Testing vs Production:**
-- **For TESTING the scripts:** Use your personal organization (e.g., `menkelabs`) - safer for testing since it's your own org
-- **For PRODUCTION use:** Use the organization you want to monitor (e.g., `embabel`)
-
 **Example:**
 ```bash
 # Your personal GitHub username
 YOUR_GITHUB_USER="jmjava"
 
-# For testing: Use your personal org (safer)
-UPSTREAM_ORG="menkelabs"  # Testing with your own org
-
-# For production: Use the org you want to monitor
-UPSTREAM_ORG="embabel"    # Monitoring embabel repos
+# Organization to monitor (production)
+UPSTREAM_ORG="embabel"
 ```
+
+> **Note:** For testing with your personal organization, use `TEST_UPSTREAM_ORG` (see below). This keeps production and test configs separate.
 
 ### `BASE_DIR` (Optional)
 
@@ -163,6 +158,35 @@ BASE_DIR="$HOME/github/${YOUR_GITHUB_USER}"
 ```bash
 BASE_DIR="$HOME/code/my-org-repos"
 ```
+
+### `TEST_UPSTREAM_ORG` (Optional)
+
+The GitHub organization to use for **testing only**. If set, test scripts will automatically use this instead of `UPSTREAM_ORG`.
+
+**Use Cases:**
+- Use your personal organization for testing (safer, since it's your own org)
+- Keep production scripts using `UPSTREAM_ORG` (e.g., `embabel`)
+- Tests automatically switch to `TEST_UPSTREAM_ORG` without manual changes
+
+**Example:**
+```bash
+# Production org
+UPSTREAM_ORG=embabel
+
+# Test org (your personal org)
+TEST_UPSTREAM_ORG=menkelabs
+```
+
+**How it works:**
+- Production scripts: Always use `UPSTREAM_ORG` (e.g., `embabel`)
+- Test scripts: Automatically use `TEST_UPSTREAM_ORG` if set (e.g., `menkelabs`)
+- If `TEST_UPSTREAM_ORG` is not set, tests also use `UPSTREAM_ORG`
+
+**Benefits:**
+- No need to manually switch `UPSTREAM_ORG` between testing and production
+- Clear separation between test and production configurations
+- Tests use safer test org automatically
+- Production scripts remain unchanged
 
 ### `MONITOR_REPOS` (Optional)
 
