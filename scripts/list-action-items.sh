@@ -4,8 +4,10 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LEARN_DIR="$(dirname "$SCRIPT_DIR")"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 # Colors
 GREEN='\033[0;32m'
@@ -32,8 +34,10 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 echo -e "${BLUE}🔄 Repositories Needing Sync${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
 
-GUIDE_DIR="$HOME/github/jmjava/guide"
-AGENT_DIR="$HOME/github/jmjava/embabel-agent"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 check_repo_sync() {
     local repo_dir=$1
@@ -71,48 +75,47 @@ check_repo_sync() {
     fi
 }
 
-check_repo_sync "$GUIDE_DIR" "guide"
-check_repo_sync "$AGENT_DIR" "embabel-agent"
+# Check all configured repos or auto-detect
+if [ -n "$MONITOR_REPOS" ]; then
+    REPOS_TO_CHECK="$MONITOR_REPOS"
+else
+    REPOS_TO_CHECK=$(find "$BASE_DIR" -maxdepth 1 -type d -not -path "$BASE_DIR" 2>/dev/null | \
+        xargs -I {} basename {} | \
+        head -"${MAX_MONITOR_REPOS:-10}" | \
+        tr '\n' ' ')
+fi
+
+for repo_name in $REPOS_TO_CHECK; do
+    repo_dir="$BASE_DIR/$repo_name"
+    if [ -d "$repo_dir" ] && [ -d "$repo_dir/.git" ]; then
+        check_repo_sync "$repo_dir" "$repo_name"
+    fi
+done
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}📋 Open PRs to Review${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
 
-# Check embabel-agent PRs
-AGENT_PRS=$(gh pr list --repo embabel/embabel-agent --state open --limit 20 --json number,title,author,createdAt,url 2>/dev/null || echo "[]")
-AGENT_PR_COUNT=$(echo "$AGENT_PRS" | jq '. | length' 2>/dev/null || echo "0")
+# Check PRs from all configured repos
+TOTAL_PR_COUNT=0
+for repo_name in $REPOS_TO_CHECK; do
+    REPO_PRS=$(gh pr list --repo "${UPSTREAM_ORG}/$repo_name" --state open --limit 20 --json number,title,author,createdAt,url 2>/dev/null || echo "[]")
+    REPO_PR_COUNT=$(echo "$REPO_PRS" | jq '. | length' 2>/dev/null || echo "0")
+    
+    if [ "$REPO_PR_COUNT" -gt 0 ]; then
+        echo -e "${GREEN}$repo_name: $REPO_PR_COUNT open PR(s)${NC}\n"
+        echo "$REPO_PRS" | jq -r '.[] | "\(.number)|\(.title)|\(.author.login)|\(.createdAt)|\(.url)"' 2>/dev/null | while IFS='|' read -r num title author created url; do
+            add_action "Review PR #$num: $title (by $author)" || true
+            echo -e "   ${YELLOW}Created:${NC} $created"
+            echo -e "   ${YELLOW}View:${NC} epr $repo_name $num"
+            echo -e "   ${YELLOW}URL:${NC} $url"
+            echo ""
+        done
+        TOTAL_PR_COUNT=$((TOTAL_PR_COUNT + REPO_PR_COUNT))
+    fi
+done
 
-if [ "$AGENT_PR_COUNT" -gt 0 ]; then
-    echo -e "${GREEN}embabel-agent: $AGENT_PR_COUNT open PR(s)${NC}\n"
-    echo "$AGENT_PRS" | jq -r '.[] | "\(.number)|\(.title)|\(.author.login)|\(.createdAt)|\(.url)"' 2>/dev/null | while IFS='|' read -r num title author created url; do
-        add_action "Review PR #$num: $title (by $author)" || true
-        echo -e "   ${YELLOW}Created:${NC} $created"
-        echo -e "   ${YELLOW}View:${NC} epr agent $num"
-        echo -e "   ${YELLOW}URL:${NC} $url"
-        echo ""
-    done
-    # Update count after processing PRs
-    ACTION_COUNT=$((ACTION_COUNT + AGENT_PR_COUNT))
-fi
-
-# Check guide PRs
-GUIDE_PRS=$(gh pr list --repo embabel/guide --state open --limit 20 --json number,title,author,createdAt,url 2>/dev/null || echo "[]")
-GUIDE_PR_COUNT=$(echo "$GUIDE_PRS" | jq '. | length' 2>/dev/null || echo "0")
-
-if [ "$GUIDE_PR_COUNT" -gt 0 ]; then
-    echo -e "${GREEN}guide: $GUIDE_PR_COUNT open PR(s)${NC}\n"
-    echo "$GUIDE_PRS" | jq -r '.[] | "\(.number)|\(.title)|\(.author.login)|\(.createdAt)|\(.url)"' 2>/dev/null | while IFS='|' read -r num title author created url; do
-        add_action "Review PR #$num: $title (by $author)" || true
-        echo -e "   ${YELLOW}Created:${NC} $created"
-        echo -e "   ${YELLOW}View:${NC} epr guide $num"
-        echo -e "   ${YELLOW}URL:${NC} $url"
-        echo ""
-    done
-    # Update count after processing PRs
-    ACTION_COUNT=$((ACTION_COUNT + GUIDE_PR_COUNT))
-fi
-
-if [ "$AGENT_PR_COUNT" = "0" ] && [ "$GUIDE_PR_COUNT" = "0" ]; then
+if [ "$TOTAL_PR_COUNT" -eq 0 ]; then
     echo -e "${GREEN}✓ No open PRs to review${NC}\n"
 fi
 
@@ -120,24 +123,26 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 echo -e "${BLUE}🏷️  Recent Releases to Check${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
 
-# Check embabel-agent releases
-AGENT_RELEASES=$(gh release list --repo embabel/embabel-agent --limit 3 --json tagName,publishedAt,url 2>/dev/null || echo "[]")
-AGENT_RELEASE_COUNT=$(echo "$AGENT_RELEASES" | jq '. | length' 2>/dev/null || echo "0")
-
-if [ "$AGENT_RELEASE_COUNT" -gt 0 ]; then
-    echo "$AGENT_RELEASES" | jq -r '.[] | "\(.tagName)|\(.publishedAt)|\(.url)"' 2>/dev/null | while IFS='|' read -r tag published url; do
-        # Check if release is recent (within last 30 days)
-        PUBLISHED_EPOCH=$(date -d "$published" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$published" +%s 2>/dev/null || echo "0")
-        NOW_EPOCH=$(date +%s)
-        DAYS_AGO=$(( (NOW_EPOCH - PUBLISHED_EPOCH) / 86400 ))
-
-        if [ "$DAYS_AGO" -lt 30 ]; then
-            add_action "Check release $tag (published $DAYS_AGO days ago)"
-            echo -e "   ${YELLOW}URL:${NC} $url"
-            echo ""
-        fi
-    done
-fi
+# Check releases from all configured repos
+for repo_name in $REPOS_TO_CHECK; do
+    REPO_RELEASES=$(gh release list --repo "${UPSTREAM_ORG}/$repo_name" --limit 3 --json tagName,publishedAt,url 2>/dev/null || echo "[]")
+    REPO_RELEASE_COUNT=$(echo "$REPO_RELEASES" | jq '. | length' 2>/dev/null || echo "0")
+    
+    if [ "$REPO_RELEASE_COUNT" -gt 0 ]; then
+        echo "$REPO_RELEASES" | jq -r '.[] | "\(.tagName)|\(.publishedAt)|\(.url)"' 2>/dev/null | while IFS='|' read -r tag published url; do
+            # Check if release is recent (within last 30 days)
+            PUBLISHED_EPOCH=$(date -d "$published" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$published" +%s 2>/dev/null || echo "0")
+            NOW_EPOCH=$(date +%s)
+            DAYS_AGO=$(( (NOW_EPOCH - PUBLISHED_EPOCH) / 86400 ))
+            
+            if [ "$DAYS_AGO" -lt 30 ]; then
+                add_action "Check release $tag in $repo_name (published $DAYS_AGO days ago)"
+                echo -e "   ${YELLOW}URL:${NC} $url"
+                echo ""
+            fi
+        done
+    fi
+done
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}📝 Recent Commits to Review${NC}"
@@ -170,8 +175,12 @@ check_recent_commits() {
     fi
 }
 
-check_recent_commits "$GUIDE_DIR" "guide"
-check_recent_commits "$AGENT_DIR" "embabel-agent"
+for repo_name in $REPOS_TO_CHECK; do
+    repo_dir="$BASE_DIR/$repo_name"
+    if [ -d "$repo_dir" ] && [ -d "$repo_dir/.git" ]; then
+        check_recent_commits "$repo_dir" "$repo_name"
+    fi
+done
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}📊 Summary${NC}"
