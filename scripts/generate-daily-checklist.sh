@@ -1,13 +1,16 @@
 #!/bin/bash
-# Generate daily learning checklist based on EMBABEL-WORKFLOW.md
+# Generate daily learning checklist based on workflow guide
 # Usage: ./generate-daily-checklist.sh [YYYY-MM-DD]
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LEARN_DIR="$(dirname "$SCRIPT_DIR")"
-SESSION_NOTES_DIR="$LEARN_DIR/notes/session-notes"
-WORKFLOW_GUIDE="$LEARN_DIR/docs/EMBABEL-WORKFLOW.md"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
+
+SESSION_NOTES_DIR="$LEARNING_DIR/notes/session-notes"
+WORKFLOW_GUIDE="$LEARNING_DIR/docs/EMBABEL-WORKFLOW.md"
 
 # Colors
 GREEN='\033[0;32m'
@@ -22,7 +25,11 @@ else
     CHECKLIST_DATE=$(date +%Y-%m-%d)
 fi
 
-OUTPUT_FILE="$SESSION_NOTES_DIR/checklist-$CHECKLIST_DATE.md"
+# Create date-based folder
+SESSION_DIR="$SESSION_NOTES_DIR/$CHECKLIST_DATE"
+mkdir -p "$SESSION_DIR"
+
+OUTPUT_FILE="$SESSION_DIR/checklist.md"
 CURRENT_TIME=$(date +%H:%M)
 
 echo -e "${GREEN}Generating daily learning checklist for $CHECKLIST_DATE...${NC}"
@@ -34,26 +41,23 @@ cat > "$OUTPUT_FILE" << 'EOF'
 **Date:** CHECKLIST_DATE_PLACEHOLDER
 **Generated:** GENERATED_TIME_PLACEHOLDER
 
-> Based on learning path from [EMBABEL-WORKFLOW.md](../docs/EMBABEL-WORKFLOW.md)
+> Based on learning path from workflow documentation
 
 ## 🎯 Today's Learning Goals
 
 ### Week 1: Get Familiar
 
-- [ ] Run both projects locally
-  - [ ] guide project
-  - [ ] embabel-agent project
+- [ ] Run projects locally
+  - [ ] Clone and run key repositories from ${UPSTREAM_ORG}
+  - [ ] Check README files for setup instructions
 - [ ] Read all README files
-  - [ ] guide/README.md
-  - [ ] embabel-agent/README.md
-  - [ ] embabel-learning/README.md
+  - [ ] Repository READMEs
+  - [ ] Learning workspace README
 - [ ] Look at recent PRs to understand common changes
-  - [ ] List open PRs: `gh pr list --repo embabel/guide`
-  - [ ] List open PRs: `gh pr list --repo embabel/embabel-agent`
-  - [ ] Review at least 2 PRs: `ereview agent <PR_NUMBER>`
+  - [ ] List open PRs: `gh pr list --repo ${UPSTREAM_ORG}/<repo-name>`
+  - [ ] Review at least 2 PRs: `epr <repo-name> <PR_NUMBER>`
 - [ ] Find the main entry points
-  - [ ] Find Application.kt files in guide
-  - [ ] Find Application.kt files in embabel-agent
+  - [ ] Identify main application files
   - [ ] Understand project structure
 
 ### Week 2: Understand Structure
@@ -65,8 +69,7 @@ cat > "$OUTPUT_FILE" << 'EOF'
   - [ ] Take notes on key components
 - [ ] Create a diagram of how components connect
 - [ ] Run tests locally
-  - [ ] guide tests
-  - [ ] embabel-agent tests
+  - [ ] Repository test suites
 - [ ] Make a tiny change and see what breaks
 
 ### Week 3: Start Contributing

@@ -1,20 +1,31 @@
 #!/bin/bash
 # Step-by-step PR review workflow
-# Usage: ./review-pr-workflow.sh [guide|agent] <PR_NUMBER>
+# Usage: ./review-pr-workflow.sh <repo-name> <PR_NUMBER>
 
 set -e
 
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
+
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [guide|agent] <PR_NUMBER>"
-    echo "Example: $0 agent 1223"
+    echo "Usage: $0 <repo-name> <PR_NUMBER>"
+    echo "Example: $0 guide 1223"
     exit 1
 fi
 
-REPO=$1
+REPO_NAME=$1
 PR_NUM=$2
 
-GUIDE_DIR="$HOME/github/jmjava/guide"
-AGENT_DIR="$HOME/github/jmjava/embabel-agent"
+REPO_DIR="$BASE_DIR/$REPO_NAME"
+UPSTREAM_REPO="${UPSTREAM_ORG}/$REPO_NAME"
+
+if [ ! -d "$REPO_DIR" ] || [ ! -d "$REPO_DIR/.git" ]; then
+    echo -e "${RED}❌ Repository not found: $REPO_DIR${NC}"
+    echo "Make sure the repository is cloned to $BASE_DIR"
+    exit 1
+fi
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -22,21 +33,6 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 RED='\033[0;31m'
 NC='\033[0m'
-
-case "$REPO" in
-    guide)
-        REPO_DIR="$GUIDE_DIR"
-        UPSTREAM_REPO="embabel/guide"
-        ;;
-    agent)
-        REPO_DIR="$AGENT_DIR"
-        UPSTREAM_REPO="embabel/embabel-agent"
-        ;;
-    *)
-        echo "Invalid repo. Use 'guide' or 'agent'"
-        exit 1
-        ;;
-esac
 
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}📋 PR Review Workflow${NC}"
@@ -85,7 +81,7 @@ if git remote | grep -q "upstream"; then
 else
     echo -e "${YELLOW}⚠️  Upstream remote not configured${NC}"
     echo -e "${YELLOW}   Setting up upstream...${NC}\n"
-    git remote add upstream "git@github.com:embabel/$REPO.git" 2>/dev/null || true
+    git remote add upstream "git@github.com:${UPSTREAM_ORG}/$REPO_NAME.git" 2>/dev/null || true
     git fetch upstream
     echo -e "${GREEN}✓ Upstream configured${NC}\n"
 fi

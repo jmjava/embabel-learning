@@ -1,9 +1,14 @@
 #!/bin/bash
 # Quick review of a specific PR you submitted
-# Usage: ./review-my-pr.sh <repo> <pr_number>
+# Usage: ./review-my-pr.sh <repo-name> <pr_number>
 # Example: ./review-my-pr.sh guide 123
 
 set -e
+
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -13,16 +18,14 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 <repo> <pr_number>"
+    echo "Usage: $0 <repo-name> <pr_number>"
     echo "Example: $0 guide 123"
     exit 1
 fi
 
-REPO=$1
+REPO_NAME=$1
 PR_NUM=$2
-EMBABEL_ORG="embabel"
-BASE_DIR="$HOME/github/jmjava"
-UPSTREAM_REPO="$EMBABEL_ORG/$REPO"
+UPSTREAM_REPO="${UPSTREAM_ORG}/$REPO_NAME"
 
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}PR Review Helper${NC}"

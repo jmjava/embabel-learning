@@ -1,8 +1,13 @@
 #!/bin/bash
-# Find and analyze YOUR PRs and contributions across embabel repositories
+# Find and analyze YOUR PRs and contributions across upstream organization repositories
 # Usage: ./my-contributions.sh [repo_name] [--all]
 
 set -e
+
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -12,20 +17,17 @@ CYAN='\033[0;36m'
 GRAY='\033[0;90m'
 NC='\033[0m'
 
-YOUR_USER="jmjava"
-EMBABEL_ORG="embabel"
-BASE_DIR="$HOME/github/jmjava"
-OUTPUT_DIR="$BASE_DIR/embabel-learning/notes/my-contributions"
+OUTPUT_DIR="$LEARNING_DIR/notes/my-contributions"
 
 # Create output directory
 mkdir -p "$OUTPUT_DIR"
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}Your Embabel Contributions${NC}"
+echo -e "${GREEN}Your ${UPSTREAM_ORG} Contributions${NC}"
 echo -e "${GREEN}========================================${NC}\n"
 
-# Get GitHub username
-GITHUB_USER=$(gh api user -q .login 2>/dev/null || echo "$YOUR_USER")
+# Get GitHub username (try to detect, fallback to config)
+GITHUB_USER=$(gh api user -q .login 2>/dev/null || echo "$YOUR_GITHUB_USER")
 
 echo -e "${CYAN}Analyzing contributions by: $GITHUB_USER${NC}\n"
 
@@ -33,7 +35,7 @@ echo -e "${CYAN}Analyzing contributions by: $GITHUB_USER${NC}\n"
 analyze_repo() {
     local repo_name=$1
     local repo_path="$BASE_DIR/$repo_name"
-    local upstream_repo="$EMBABEL_ORG/$repo_name"
+    local upstream_repo="${UPSTREAM_ORG}/$repo_name"
 
     if [ ! -d "$repo_path" ]; then
         echo -e "${GRAY}⊝ $repo_name not cloned locally${NC}"
@@ -152,7 +154,7 @@ analyze_repo() {
 create_summary() {
     SUMMARY_FILE="$OUTPUT_DIR/SUMMARY.md"
 
-    echo "# My Embabel Contributions Summary" > "$SUMMARY_FILE"
+    echo "# My ${UPSTREAM_ORG} Contributions Summary" > "$SUMMARY_FILE"
     echo "" >> "$SUMMARY_FILE"
     echo "Generated: $(date)" >> "$SUMMARY_FILE"
     echo "Author: $GITHUB_USER" >> "$SUMMARY_FILE"
@@ -171,10 +173,10 @@ create_summary() {
             repo_name=$(basename "$repo")
             cd "$repo"
 
-            # Check if it's an embabel repo
-            if gh repo view "$YOUR_USER/$repo_name" --json parent --jq '.parent.owner.login' 2>/dev/null | grep -q "$EMBABEL_ORG"; then
+            # Check if it's an upstream org repo
+            if gh repo view "$YOUR_GITHUB_USER/$repo_name" --json parent --jq '.parent.owner.login' 2>/dev/null | grep -q "$UPSTREAM_ORG"; then
                 # Count PRs
-                PR_DATA=$(gh pr list --repo "$EMBABEL_ORG/$repo_name" --author "$GITHUB_USER" --state all --json state --limit 100 2>/dev/null || echo "[]")
+                PR_DATA=$(gh pr list --repo "${UPSTREAM_ORG}/$repo_name" --author "$GITHUB_USER" --state all --json state --limit 100 2>/dev/null || echo "[]")
                 if [ "$PR_DATA" != "[]" ]; then
                     REPO_TOTAL=$(echo "$PR_DATA" | jq '. | length')
                     REPO_OPEN=$(echo "$PR_DATA" | jq '[.[] | select(.state == "OPEN")] | length')
@@ -237,8 +239,8 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "Usage: $0 [repo_name] [--all]"
     echo ""
     echo "Options:"
-    echo "  repo_name    Analyze specific repository (e.g., 'guide', 'embabel-agent')"
-    echo "  --all        Analyze all cloned embabel repositories"
+    echo "  repo_name    Analyze specific repository (e.g., 'guide', 'repo-name')"
+    echo "  --all        Analyze all cloned ${UPSTREAM_ORG} repositories"
     echo "  (no args)    Interactive mode - choose repositories"
     echo ""
     echo "Output:"
@@ -257,15 +259,15 @@ elif [ "$1" = "--all" ]; then
             repo_name=$(basename "$repo")
             cd "$repo"
 
-            # Check if it's an embabel fork
-            if gh repo view "$YOUR_USER/$repo_name" --json parent --jq '.parent.owner.login' 2>/dev/null | grep -q "$EMBABEL_ORG"; then
+            # Check if it's an upstream org fork
+            if gh repo view "$YOUR_GITHUB_USER/$repo_name" --json parent --jq '.parent.owner.login' 2>/dev/null | grep -q "$UPSTREAM_ORG"; then
                 analyze_repo "$repo_name"
             fi
         fi
     done
 else
     # Interactive mode - show repos and let user choose
-    echo -e "${YELLOW}Available embabel repositories:${NC}\n"
+    echo -e "${YELLOW}Available ${UPSTREAM_ORG} repositories:${NC}\n"
 
     REPOS=()
     for repo in "$BASE_DIR"/*/; do
@@ -273,14 +275,14 @@ else
             repo_name=$(basename "$repo")
             cd "$repo"
 
-            if gh repo view "$YOUR_USER/$repo_name" --json parent --jq '.parent.owner.login' 2>/dev/null | grep -q "$EMBABEL_ORG"; then
+            if gh repo view "$YOUR_GITHUB_USER/$repo_name" --json parent --jq '.parent.owner.login' 2>/dev/null | grep -q "$UPSTREAM_ORG"; then
                 REPOS+=("$repo_name")
             fi
         fi
     done
 
     if [ ${#REPOS[@]} -eq 0 ]; then
-        echo -e "${RED}No embabel repositories found${NC}"
+        echo -e "${RED}No ${UPSTREAM_ORG} repositories found${NC}"
         exit 1
     fi
 

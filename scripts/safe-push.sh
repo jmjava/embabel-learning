@@ -4,8 +4,10 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LEARN_DIR="$(dirname "$SCRIPT_DIR")"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 # Load safety checks
 source "$SCRIPT_DIR/safety-checks.sh"
@@ -123,17 +125,17 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 0
 fi
 
-# Step 7: Safety check - prevent pushing to embabel organization
-if ! block_embabel_push "$REMOTE"; then
+# Step 7: Safety check - prevent pushing to upstream organization
+if ! block_upstream_push "$REMOTE"; then
     exit 1
 fi
 
-# Additional check: warn if we're in an embabel repo directory
-if check_embabel_repo; then
-    echo -e "${YELLOW}⚠️  WARNING: You are in an embabel repository directory${NC}"
+# Additional check: warn if we're in an upstream org repo directory
+if check_upstream_repo; then
+    echo -e "${YELLOW}⚠️  WARNING: You are in a ${UPSTREAM_ORG} repository directory${NC}"
     echo -e "${YELLOW}   Double-checking that 'origin' points to YOUR fork...${NC}"
     if ! is_safe_remote origin; then
-        echo -e "${RED}✗ SAFETY BLOCK: 'origin' remote points to embabel organization${NC}"
+        echo -e "${RED}✗ SAFETY BLOCK: 'origin' remote points to ${UPSTREAM_ORG} organization${NC}"
         exit 1
     fi
     echo -e "${GREEN}✓ Confirmed: 'origin' points to your fork${NC}\n"

@@ -7,18 +7,20 @@ This directory contains weekly session notes and catch-up summaries for your Emb
 ```
 session-notes/
 ├── README.md                    # This file
-├── checklist-YYYY-MM-DD.md     # Daily learning checklists (track progress)
-├── catch-up-YYYY-MM-DD.md       # Catch-up summaries (when returning after a break)
-├── week-YYYY-MM-DD.md           # Weekly session notes
 ├── template-weekly-notes.md     # Template for creating new weekly notes
-└── template-catch-up.md         # Template for catch-up summaries
+├── template-catch-up.md         # Template for catch-up summaries
+└── YYYY-MM-DD/                  # Each session has its own folder
+    ├── checklist.md             # Daily learning checklist
+    ├── catch-up.md              # Catch-up summary
+    └── weekly-notes.md          # Weekly session notes (if applicable)
 ```
 
 ## Naming Convention
 
-- **Daily checklists:** `checklist-YYYY-MM-DD.md` (e.g., `checklist-2026-01-03.md`)
-- **Catch-up summaries:** `catch-up-YYYY-MM-DD.md` (e.g., `catch-up-2026-01-03.md`)
-- **Weekly notes:** `week-YYYY-MM-DD.md` (use the Monday date of that week)
+- **Session folders:** `YYYY-MM-DD/` (e.g., `2026-01-03/`)
+- **Daily checklists:** `YYYY-MM-DD/checklist.md`
+- **Catch-up summaries:** `YYYY-MM-DD/catch-up.md`
+- **Weekly notes:** `YYYY-MM-DD/weekly-notes.md` (use the Monday date of that week)
 
 ## Usage
 
@@ -34,7 +36,7 @@ echecklist
 echecklist 2026-01-04
 ```
 
-This creates `checklist-YYYY-MM-DD.md` with:
+This creates `YYYY-MM-DD/checklist.md` with:
 
 - ✅ Learning goals from EMBABEL-WORKFLOW.md (Week 1-4+)
 - ✅ Daily activity tracking
@@ -49,42 +51,41 @@ This creates `checklist-YYYY-MM-DD.md` with:
 
 ### Creating Weekly Notes
 
-1. Copy the template:
+**Generate weekly session notes:**
 
-   ```bash
-   cp template-weekly-notes.md week-$(date +%Y-%m-%d).md
-   ```
+```bash
+# Generate for current week
+eweek
 
-2. Fill in your activities, learnings, and plans for the week
+# Generate for specific week (Monday date)
+eweek 2026-01-06
+```
 
-3. Update at the end of each day or week
+This creates `YYYY-MM-DD/weekly-notes.md` (using Monday's date).
 
 ### Creating Catch-Up Summaries
 
-When returning after a break (like after a few weeks), create a catch-up summary:
+**Generate catch-up summary (syncs repos first):**
 
-1. Run the catch-up script (if available) or manually create:
+```bash
+# Generate for today
+ecatchup
 
-   ```bash
-   # Review what's changed
-   cd ~/github/jmjava/embabel-learning
-   em  # Monitor changes
-   emy --all  # Your contributions
+# Generate with specific last session date
+ecatchup 2025-12-20
+```
 
-   # Create catch-up summary
-   cp template-catch-up.md catch-up-$(date +%Y-%m-%d).md
-   ```
+This creates `YYYY-MM-DD/catch-up.md` and:
 
-2. Fill in:
-   - What changed since last session
-   - New PRs to review
-   - Action items
-   - Learning opportunities
+- Syncs all embabel repositories
+- Gets comprehensive embabel summaries
+- Organizes activity by date
 
-## Current Files
+## Current Sessions
 
-- `checklist-2026-01-03.md` - Today's learning checklist
-- `catch-up-2026-01-03.md` - Catch-up after ~3 week break
+- `2026-01-03/` - Today's session
+  - `checklist.md` - Daily learning checklist
+  - `catch-up.md` - Catch-up summary
 
 ## Tips
 

@@ -1,11 +1,13 @@
 #!/bin/bash
 # Compare your fork with upstream to see what's different
-# Usage: ./compare-branches.sh [guide|agent]
+# Usage: ./compare-branches.sh [repo-name|all]
 
 set -e
 
-GUIDE_DIR="$HOME/github/jmjava/guide"
-AGENT_DIR="$HOME/github/jmjava/embabel-agent"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -15,7 +17,7 @@ NC='\033[0m'
 compare_repo() {
     local repo_dir=$1
     local repo_name=$2
-    local upstream_repo=$3
+    local upstream_repo="${UPSTREAM_ORG}/$repo_name"
 
     cd "$repo_dir"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -66,20 +68,45 @@ compare_repo() {
     echo ""
 }
 
-case "${1:-all}" in
-    guide)
-        compare_repo "$GUIDE_DIR" "guide" "embabel/guide"
-        ;;
-    agent)
-        compare_repo "$AGENT_DIR" "embabel-agent" "embabel/embabel-agent"
-        ;;
-    all)
-        compare_repo "$GUIDE_DIR" "guide" "embabel/guide"
-        echo ""
-        compare_repo "$AGENT_DIR" "embabel-agent" "embabel/embabel-agent"
-        ;;
-    *)
-        echo "Usage: $0 [guide|agent|all]"
+# Main logic
+REPO_ARG="${1:-all}"
+
+if [ "$REPO_ARG" = "all" ]; then
+    # Compare all configured repos or auto-detect
+    if [ -n "$MONITOR_REPOS" ]; then
+        REPOS_TO_COMPARE="$MONITOR_REPOS"
+    else
+        # Auto-detect from cloned repos
+        REPOS_TO_COMPARE=$(find "$BASE_DIR" -maxdepth 1 -type d -not -path "$BASE_DIR" | \
+            xargs -I {} basename {} | \
+            grep -v "^\." | \
+            head -"${MAX_MONITOR_REPOS:-10}" | \
+            tr '\n' ' ')
+        REPOS_TO_COMPARE=$(echo "$REPOS_TO_COMPARE" | xargs)  # Trim whitespace
+    fi
+
+    if [ -z "$REPOS_TO_COMPARE" ]; then
+        echo -e "${RED}❌ No repositories found to compare${NC}"
+        echo "Set MONITOR_REPOS in config.sh or specify a repo name"
         exit 1
-        ;;
-esac
+    fi
+
+    for repo_name in $REPOS_TO_COMPARE; do
+        repo_dir="$BASE_DIR/$repo_name"
+        if [ -d "$repo_dir" ] && [ -d "$repo_dir/.git" ]; then
+            compare_repo "$repo_dir" "$repo_name"
+            echo ""
+        fi
+    done
+else
+    # Compare specific repo
+    repo_name="$REPO_ARG"
+    repo_dir="$BASE_DIR/$repo_name"
+
+    if [ ! -d "$repo_dir" ] || [ ! -d "$repo_dir/.git" ]; then
+        echo -e "${RED}❌ Repository not found: $repo_dir${NC}"
+        exit 1
+    fi
+
+    compare_repo "$repo_dir" "$repo_name"
+fi
