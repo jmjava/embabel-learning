@@ -9,6 +9,17 @@ repos:
       - id: ggshield
         language_version: python3
 
+  # Local safety checks - Prevent commits to upstream organization repos
+  - repo: local
+    hooks:
+      - id: block-upstream-commit
+        name: Block commits to upstream organization
+        entry: bash -c 'REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" && if [ -z "$REPO_ROOT" ]; then exit 0; fi && SCRIPT_DIR="$REPO_ROOT/scripts" && LEARNING_DIR="$REPO_ROOT" && if [ -f "$SCRIPT_DIR/config-loader.sh" ]; then source "$SCRIPT_DIR/config-loader.sh" >/dev/null 2>&1; fi && if [ -f "$SCRIPT_DIR/safety-checks.sh" ]; then source "$SCRIPT_DIR/safety-checks.sh" >/dev/null 2>&1 && block_upstream_commit; else exit 0; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
