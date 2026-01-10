@@ -1,5 +1,7 @@
 # 🎓 Organization Learning Workspace
 
+### note this is brand new -- unit tests are in place but this is alpha status
+
 Your central hub for learning, monitoring, and contributing to any GitHub organization's repositories.
 
 > **📖 Need detailed information?** See [docs/EMBABEL-WORKFLOW.md](docs/EMBABEL-WORKFLOW.md) for comprehensive guides on PR reviews, contribution tracking, session notes, and more.
