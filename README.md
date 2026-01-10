@@ -11,6 +11,7 @@ Your central hub for learning, monitoring, and contributing to the [Embabel ecos
 | **Check what needs attention** | `eactions`          |
 | **Check if repos are in sync** | `esyncstatus all`   |
 | **Sync repositories**          | `esync`             |
+| **Reset fork to upstream**     | `ereset agent`      |
 | **Safe push (with checks)**    | `epush`             |
 | **Review a PR**                | `ereview agent 123` |
 | **Daily monitoring**           | `em`                |
@@ -19,6 +20,7 @@ Your central hub for learning, monitoring, and contributing to the [Embabel ecos
 | **Generate weekly notes**      | `eweek`             |
 | **Generate daily checklist**   | `echecklist`        |
 | **Catch up after break**       | `ecatchup`          |
+| **Embabel repo summaries**     | `esummary`          |
 
 ## 🚀 Quick Start (5 minutes)
 
@@ -113,11 +115,12 @@ embabel-learning/
 
 ### PR Review & Sync
 
-| Script                  | Alias         | Description                                         |
-| ----------------------- | ------------- | --------------------------------------------------- |
-| `check-sync-status.sh`  | `esyncstatus` | Check repository sync status with clear fixes       |
-| `review-pr-workflow.sh` | `ereview`     | Step-by-step PR review workflow (keeps IDE in sync) |
-| `safe-push.sh`          | `epush`       | Push with GitGuardian & pre-commit checks           |
+| Script                  | Alias         | Description                                           |
+| ----------------------- | ------------- | ----------------------------------------------------- |
+| `check-sync-status.sh`  | `esyncstatus` | Check repository sync status with clear fixes         |
+| `review-pr-workflow.sh` | `ereview`     | Step-by-step PR review workflow (keeps IDE in sync)   |
+| `reset-to-upstream.sh`  | `ereset`      | Reset fork to match upstream (discards local changes) |
+| `safe-push.sh`          | `epush`       | Push with GitGuardian & pre-commit checks             |
 
 ### Security & Quality
 

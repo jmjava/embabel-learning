@@ -22,7 +22,11 @@ else
     CHECKLIST_DATE=$(date +%Y-%m-%d)
 fi
 
-OUTPUT_FILE="$SESSION_NOTES_DIR/checklist-$CHECKLIST_DATE.md"
+# Create date-based folder
+SESSION_DIR="$SESSION_NOTES_DIR/$CHECKLIST_DATE"
+mkdir -p "$SESSION_DIR"
+
+OUTPUT_FILE="$SESSION_DIR/checklist.md"
 CURRENT_TIME=$(date +%H:%M)
 
 echo -e "${GREEN}Generating daily learning checklist for $CHECKLIST_DATE...${NC}"

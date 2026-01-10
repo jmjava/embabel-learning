@@ -80,9 +80,19 @@ sync_repo() {
     if git merge upstream/$main_branch --no-edit; then
         echo -e "${GREEN}✓ Successfully synced with upstream/$main_branch${NC}"
 
+        # Show what origin points to
+        ORIGIN_URL=$(git remote get-url origin 2>/dev/null || echo "")
+        if [[ "$ORIGIN_URL" == *"jmjava"* ]]; then
+            ORIGIN_DESC="your fork (jmjava/$repo_name)"
+        else
+            ORIGIN_DESC="origin ($ORIGIN_URL)"
+        fi
+
         # Offer to push
         echo ""
-        read -p "Push changes to origin? (y/n) " -n 1 -r
+        echo -e "${YELLOW}Push synced changes to $ORIGIN_DESC? (y/n)${NC}"
+        echo -e "${CYAN}Note: This pushes to YOUR fork, not to embabel${NC}"
+        read -p "> " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             # Use safe push if available (with safety check for embabel)

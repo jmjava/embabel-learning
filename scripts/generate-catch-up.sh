@@ -25,7 +25,11 @@ else
     LAST_SESSION="~$(date -d "3 weeks ago" +%Y-%m-%d 2>/dev/null || date -v-3w +%Y-%m-%d 2>/dev/null || echo "unknown")"
 fi
 
-OUTPUT_FILE="$SESSION_NOTES_DIR/catch-up-$CATCH_UP_DATE.md"
+# Create date-based folder
+SESSION_DIR="$SESSION_NOTES_DIR/$CATCH_UP_DATE"
+mkdir -p "$SESSION_DIR"
+
+OUTPUT_FILE="$SESSION_DIR/catch-up.md"
 
 # Check if file already exists
 if [ -f "$OUTPUT_FILE" ]; then
@@ -41,8 +45,15 @@ fi
 
 echo -e "${GREEN}Generating catch-up summary for $CATCH_UP_DATE...${NC}"
 
+# Step 1: Sync repos first
+echo -e "${BLUE}Step 1: Syncing embabel repositories...${NC}"
+echo -e "${YELLOW}This may take a moment...${NC}"
+cd "$LEARN_DIR"
+./scripts/sync-upstream.sh all > /dev/null 2>&1 || echo -e "${YELLOW}Note: Some repos may need manual sync${NC}"
+echo -e "${GREEN}✓ Sync complete${NC}\n"
+
 # Extract current status
-echo -e "${BLUE}Gathering current status...${NC}"
+echo -e "${BLUE}Step 2: Gathering current status...${NC}"
 
 # Get contributions
 CONTRIBUTIONS=$(mktemp)
@@ -90,22 +101,101 @@ else
     echo "- ⏳ embabel-agent" >> "$REPO_STATUS"
 fi
 
-# Get what's changed
-CHANGES=$(mktemp)
-echo "## 🔄 What's Changed Since You Last Updated" > "$CHANGES"
-echo "" >> "$CHANGES"
+# Get embabel summaries organized by date
+EMBABEL_SUMMARY=$(mktemp)
+echo "## 📅 Embabel Ecosystem Activity (by Date)" > "$EMBABEL_SUMMARY"
+echo "" >> "$EMBABEL_SUMMARY"
 
-# Get recent releases
-echo "### In embabel-agent" >> "$CHANGES"
-echo "" >> "$CHANGES"
-echo "**Recent Releases:**" >> "$CHANGES"
-gh release list --repo embabel/embabel-agent --limit 3 --json tagName,publishedAt 2>/dev/null | jq -r '.[] | "- **\(.tagName)** - Released \(.publishedAt)"' >> "$CHANGES" 2>/dev/null || echo "- No recent releases" >> "$CHANGES"
-echo "" >> "$CHANGES"
+# Today's date
+TODAY=$(date +%Y-%m-%d)
+echo "### $TODAY (Today)" >> "$EMBABEL_SUMMARY"
+echo "" >> "$EMBABEL_SUMMARY"
 
-# Get open PRs
-echo "**New Open PRs to Review:**" >> "$CHANGES"
-gh pr list --repo embabel/embabel-agent --state open --limit 5 --json number,title,author 2>/dev/null | jq -r '.[] | "- **PR #\(.number)**: \(.title) (\(.author.login))"' >> "$CHANGES" 2>/dev/null || echo "- No new PRs" >> "$CHANGES"
-echo "" >> "$CHANGES"
+# Get sync status
+echo "**Sync Status:**" >> "$EMBABEL_SUMMARY"
+GUIDE_DIR="$HOME/github/jmjava/guide"
+AGENT_DIR="$HOME/github/jmjava/embabel-agent"
+
+if [ -d "$GUIDE_DIR" ]; then
+    cd "$GUIDE_DIR"
+    if git remote | grep -q "upstream"; then
+        git fetch upstream --quiet 2>/dev/null || true
+        BEHIND=$(git rev-list --count HEAD..upstream/main 2>/dev/null || echo "0")
+        if [ "$BEHIND" = "0" ]; then
+            echo "- ✅ guide: Synced" >> "$EMBABEL_SUMMARY"
+        else
+            echo "- ⚠️ guide: $BEHIND commits behind" >> "$EMBABEL_SUMMARY"
+        fi
+    else
+        echo "- ⚠️ guide: No upstream configured" >> "$EMBABEL_SUMMARY"
+    fi
+fi
+
+if [ -d "$AGENT_DIR" ]; then
+    cd "$AGENT_DIR"
+    if git remote | grep -q "upstream"; then
+        git fetch upstream --quiet 2>/dev/null || true
+        BEHIND=$(git rev-list --count HEAD..upstream/main 2>/dev/null || echo "0")
+        if [ "$BEHIND" = "0" ]; then
+            echo "- ✅ embabel-agent: Synced" >> "$EMBABEL_SUMMARY"
+        else
+            echo "- ⚠️ embabel-agent: $BEHIND commits behind" >> "$EMBABEL_SUMMARY"
+        fi
+    else
+        echo "- ⚠️ embabel-agent: No upstream configured" >> "$EMBABEL_SUMMARY"
+    fi
+fi
+
+echo "" >> "$EMBABEL_SUMMARY"
+echo "**Activity Summary:**" >> "$EMBABEL_SUMMARY"
+echo "" >> "$EMBABEL_SUMMARY"
+
+# Get summary for each repo using the new script
+echo -e "${BLUE}Getting embabel repository summaries...${NC}"
+"$LEARN_DIR/scripts/get-embabel-summary.sh" all --no-color >> "$EMBABEL_SUMMARY" 2>/dev/null || {
+    # Fallback if script fails
+    echo "#### guide" >> "$EMBABEL_SUMMARY"
+    echo "" >> "$EMBABEL_SUMMARY"
+    echo "- **Open PRs:**" >> "$EMBABEL_SUMMARY"
+    GUIDE_OPEN=$(gh pr list --repo embabel/guide --state open --limit 10 --json number,title,author,createdAt 2>/dev/null || echo "[]")
+    GUIDE_COUNT=$(echo "$GUIDE_OPEN" | jq '. | length' 2>/dev/null || echo "0")
+    if [ "$GUIDE_COUNT" -gt 0 ]; then
+        echo "$GUIDE_OPEN" | jq -r '.[] | "  - PR #\(.number): \(.title) (\(.author.login), \(.createdAt))"' >> "$EMBABEL_SUMMARY" 2>/dev/null || echo "  (Unable to parse)" >> "$EMBABEL_SUMMARY"
+    else
+        echo "  None" >> "$EMBABEL_SUMMARY"
+    fi
+    echo "" >> "$EMBABEL_SUMMARY"
+    echo "- **Recent Releases:**" >> "$EMBABEL_SUMMARY"
+    GUIDE_RELEASES=$(gh release list --repo embabel/guide --limit 3 --json tagName,publishedAt 2>/dev/null || echo "[]")
+    GUIDE_REL_COUNT=$(echo "$GUIDE_RELEASES" | jq '. | length' 2>/dev/null || echo "0")
+    if [ "$GUIDE_REL_COUNT" -gt 0 ]; then
+        echo "$GUIDE_RELEASES" | jq -r '.[] | "  - \(.tagName) - Released \(.publishedAt)"' >> "$EMBABEL_SUMMARY" 2>/dev/null || echo "  (Unable to parse)" >> "$EMBABEL_SUMMARY"
+    else
+        echo "  None" >> "$EMBABEL_SUMMARY"
+    fi
+    echo "" >> "$EMBABEL_SUMMARY"
+    
+    echo "#### embabel-agent" >> "$EMBABEL_SUMMARY"
+    echo "" >> "$EMBABEL_SUMMARY"
+    echo "- **Open PRs:**" >> "$EMBABEL_SUMMARY"
+    AGENT_OPEN=$(gh pr list --repo embabel/embabel-agent --state open --limit 10 --json number,title,author,createdAt 2>/dev/null || echo "[]")
+    AGENT_COUNT=$(echo "$AGENT_OPEN" | jq '. | length' 2>/dev/null || echo "0")
+    if [ "$AGENT_COUNT" -gt 0 ]; then
+        echo "$AGENT_OPEN" | jq -r '.[] | "  - PR #\(.number): \(.title) (\(.author.login), \(.createdAt))"' >> "$EMBABEL_SUMMARY" 2>/dev/null || echo "  (Unable to parse)" >> "$EMBABEL_SUMMARY"
+    else
+        echo "  None" >> "$EMBABEL_SUMMARY"
+    fi
+    echo "" >> "$EMBABEL_SUMMARY"
+    echo "- **Recent Releases:**" >> "$EMBABEL_SUMMARY"
+    AGENT_RELEASES=$(gh release list --repo embabel/embabel-agent --limit 3 --json tagName,publishedAt 2>/dev/null || echo "[]")
+    AGENT_REL_COUNT=$(echo "$AGENT_RELEASES" | jq '. | length' 2>/dev/null || echo "0")
+    if [ "$AGENT_REL_COUNT" -gt 0 ]; then
+        echo "$AGENT_RELEASES" | jq -r '.[] | "  - \(.tagName) - Released \(.publishedAt)"' >> "$EMBABEL_SUMMARY" 2>/dev/null || echo "  (Unable to parse)" >> "$EMBABEL_SUMMARY"
+    else
+        echo "  None" >> "$EMBABEL_SUMMARY"
+    fi
+    echo "" >> "$EMBABEL_SUMMARY"
+}
 
 # Get action items
 ACTION_ITEMS=$(mktemp)
@@ -146,7 +236,7 @@ $(cat "$CONTRIBUTIONS")
 
 $(cat "$REPO_STATUS")
 
-$(cat "$CHANGES")
+$(cat "$EMBABEL_SUMMARY")
 
 $(cat "$ACTION_ITEMS")
 
@@ -190,7 +280,7 @@ $(cat "$ACTION_ITEMS")
 EOF
 
 # Cleanup
-rm -f "$CONTRIBUTIONS" "$REPO_STATUS" "$CHANGES" "$ACTION_ITEMS"
+rm -f "$CONTRIBUTIONS" "$REPO_STATUS" "$EMBABEL_SUMMARY" "$ACTION_ITEMS"
 
 echo -e "${GREEN}✓ Catch-up summary generated: $OUTPUT_FILE${NC}"
 echo -e "${YELLOW}Review and customize the file as needed.${NC}"

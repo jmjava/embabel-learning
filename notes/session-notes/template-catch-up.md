@@ -30,35 +30,69 @@ List your recent contributions:
 - ⏳ new-repo1
 - ⏳ new-repo2
 
-## 🔄 What's Changed Since You Last Updated
+## 📅 Embabel Ecosystem Activity (by Date)
 
-### In embabel-agent
+### YYYY-MM-DD (Today)
 
-**Recent Releases:**
+**Sync Status:**
 
-- **vX.X.X** (Name) - Released Date
+- ✅ guide: Synced
+- ⚠️ embabel-agent: 5 commits behind
 
-**New Open PRs to Review:**
+**Activity Summary:**
 
-- **PR #**: Title (author)
+#### guide
 
-**Recent Upstream Changes:**
+- **Open PRs:** 2
+  - PR #123: Title (author, date)
+  - PR #124: Title (author, date)
+- **Recent Releases:** None
+- **Recent Commits:**
+  - commit1 message
+  - commit2 message
 
-- Change 1
-- Change 2
+#### embabel-agent
 
-### In guide
+- **Open PRs:** 3
+  - PR #1223: Title (author, date)
+  - PR #1219: Title (author, date)
+  - PR #1177: Title (author, date)
+- **Recent Releases:** None
+- **Recent Commits:**
+  - commit1 message
+  - commit2 message
 
-**Recent Upstream Changes:**
+### YYYY-MM-DD (Yesterday)
 
-- Change 1
-- Change 2
+**Activity Summary:**
 
-**Your Local Status:**
+#### guide
 
-- ⚠️ **X unpushed commits:** "commit message"
-- ⚠️ **X upstream commits** you don't have locally
-- **Action needed:**
+- **Open PRs:** 2
+- **Recent Commits:**
+  - commit message
+
+#### embabel-agent
+
+- **Open PRs:** 3
+- **Recent Commits:**
+  - commit message
+
+### YYYY-MM-DD (Last Week)
+
+**Activity Summary:**
+
+#### guide
+
+- **Open PRs:** 2
+- **Recent Releases:**
+  - v1.2.3 - Released date
+
+#### embabel-agent
+
+- **Open PRs:** 3
+- **Recent Releases:**
+  - v2.1.0 - Released date
 
 ## 🚨 Action Items
 
@@ -69,16 +103,25 @@ cd ~/github/jmjava/embabel-learning
 esync <repo-name>
 ```
 
-### 2. Update Contribution Tracking
+**Repos needing sync:**
 
-```bash
-emy --all
-```
+- embabel-agent: 162 commits behind
 
-### 3. Review New PRs
+### 2. Review New PRs
 
 ```bash
 epr agent <PR_NUMBER>
+```
+
+**Priority PRs to review:**
+
+- PR #1223: Updated per action retry using annotation and properties
+- PR #1219: Thinking blocks support
+
+### 3. Update Contribution Tracking
+
+```bash
+emy --all
 ```
 
 ## 📚 Learning Opportunities
@@ -95,8 +138,8 @@ Description and why it matters.
 
 ### Immediate (Today)
 
-1. Action 1
-2. Action 2
+1. Sync embabel-agent repository
+2. Review PR #1223
 
 ### This Week
 

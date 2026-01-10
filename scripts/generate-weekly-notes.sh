@@ -24,7 +24,11 @@ else
 fi
 
 WEEK_END=$(date -d "$WEEK_START + 6 days" +%Y-%m-%d 2>/dev/null || date -j -v+6d -f "%Y-%m-%d" "$WEEK_START" +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)
-OUTPUT_FILE="$SESSION_NOTES_DIR/week-$WEEK_START.md"
+# Create date-based folder (use Monday's date)
+SESSION_DIR="$SESSION_NOTES_DIR/$WEEK_START"
+mkdir -p "$SESSION_DIR"
+
+OUTPUT_FILE="$SESSION_DIR/weekly-notes.md"
 CURRENT_DATE=$(date +%Y-%m-%d)
 CURRENT_TIME=$(date +%H:%M)
 

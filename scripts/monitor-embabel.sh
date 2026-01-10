@@ -6,6 +6,7 @@ set -e
 
 GUIDE_DIR="$HOME/github/jmjava/guide"
 AGENT_DIR="$HOME/github/jmjava/embabel-agent"
+DICE_DIR="$HOME/github/jmjava/dice"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -83,6 +84,13 @@ if [ -d "$AGENT_DIR" ]; then
     monitor_repo "$AGENT_DIR" "embabel-agent" "embabel" "embabel-agent"
 else
     echo "⚠️  Embabel-agent directory not found: $AGENT_DIR"
+fi
+
+# Monitor dice repo
+if [ -d "$DICE_DIR" ]; then
+    monitor_repo "$DICE_DIR" "dice" "embabel" "dice"
+else
+    echo "⚠️  Dice directory not found: $DICE_DIR"
 fi
 
 echo -e "${GREEN}========================================${NC}"
