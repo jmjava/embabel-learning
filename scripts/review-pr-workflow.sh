@@ -81,7 +81,7 @@ if git remote | grep -q "upstream"; then
 else
     echo -e "${YELLOW}⚠️  Upstream remote not configured${NC}"
     echo -e "${YELLOW}   Setting up upstream...${NC}\n"
-    git remote add upstream "git@github.com:embabel/$REPO.git" 2>/dev/null || true
+    git remote add upstream "git@github.com:${UPSTREAM_ORG}/$REPO_NAME.git" 2>/dev/null || true
     git fetch upstream
     echo -e "${GREEN}✓ Upstream configured${NC}\n"
 fi
