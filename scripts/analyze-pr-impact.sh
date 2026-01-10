@@ -1,22 +1,33 @@
 #!/bin/bash
 # Analyze upstream changes that might affect your PR
-# Usage: ./analyze-pr-impact.sh [guide|agent] <PR_NUMBER>
+# Usage: ./analyze-pr-impact.sh <repo-name> <PR_NUMBER>
 # Example: ./analyze-pr-impact.sh guide 123
 
 set -e
 
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
+
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [guide|agent] <PR_NUMBER>"
+    echo "Usage: $0 <repo-name> <PR_NUMBER>"
     echo "Example: $0 guide 123"
     exit 1
 fi
 
-REPO=$1
+REPO_NAME=$1
 PR_NUM=$2
 
-GUIDE_DIR="$HOME/github/jmjava/guide"
-AGENT_DIR="$HOME/github/jmjava/embabel-agent"
-OUTPUT_DIR="$HOME/github/jmjava/embabel-learning/notes/pr-impact-analysis"
+REPO_DIR="$BASE_DIR/$REPO_NAME"
+OUTPUT_DIR="$LEARNING_DIR/notes/pr-impact-analysis"
+UPSTREAM_REPO="${UPSTREAM_ORG}/$REPO_NAME"
+
+if [ ! -d "$REPO_DIR" ] || [ ! -d "$REPO_DIR/.git" ]; then
+    echo -e "${RED}❌ Repository not found: $REPO_DIR${NC}"
+    echo "Make sure the repository is cloned to $BASE_DIR"
+    exit 1
+fi
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -25,21 +36,6 @@ RED='\033[0;31m'
 CYAN='\033[0;36m'
 GRAY='\033[0;90m'
 NC='\033[0m'
-
-case "$REPO" in
-    guide)
-        REPO_DIR="$GUIDE_DIR"
-        UPSTREAM_REPO="embabel/guide"
-        ;;
-    agent)
-        REPO_DIR="$AGENT_DIR"
-        UPSTREAM_REPO="embabel/embabel-agent"
-        ;;
-    *)
-        echo -e "${RED}Invalid repo. Use 'guide' or 'agent'${NC}"
-        exit 1
-        ;;
-esac
 
 cd "$REPO_DIR"
 

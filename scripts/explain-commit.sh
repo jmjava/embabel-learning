@@ -1,23 +1,34 @@
 #!/bin/bash
 # Explain changes in a specific commit
-# Usage: ./explain-commit.sh [guide|agent] <COMMIT_HASH>
+# Usage: ./explain-commit.sh <repo-name> <COMMIT_HASH>
 # Example: ./explain-commit.sh guide abc1234
 
 set -e
 
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
+
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [guide|agent] <COMMIT_HASH>"
+    echo "Usage: $0 <repo-name> <COMMIT_HASH>"
     echo "Example: $0 guide abc1234"
     echo ""
     echo "You can use a full or partial commit hash"
     exit 1
 fi
 
-REPO=$1
+REPO_NAME=$1
 COMMIT_HASH=$2
 
-GUIDE_DIR="$HOME/github/jmjava/guide"
-AGENT_DIR="$HOME/github/jmjava/embabel-agent"
+REPO_DIR="$BASE_DIR/$REPO_NAME"
+UPSTREAM_REPO="${UPSTREAM_ORG}/$REPO_NAME"
+
+if [ ! -d "$REPO_DIR" ] || [ ! -d "$REPO_DIR/.git" ]; then
+    echo -e "${RED}❌ Repository not found: $REPO_DIR${NC}"
+    echo "Make sure the repository is cloned to $BASE_DIR"
+    exit 1
+fi
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -26,21 +37,6 @@ RED='\033[0;31m'
 CYAN='\033[0;36m'
 GRAY='\033[0;90m'
 NC='\033[0m'
-
-case "$REPO" in
-    guide)
-        REPO_DIR="$GUIDE_DIR"
-        UPSTREAM_REPO="embabel/guide"
-        ;;
-    agent)
-        REPO_DIR="$AGENT_DIR"
-        UPSTREAM_REPO="embabel/embabel-agent"
-        ;;
-    *)
-        echo -e "${RED}Invalid repo. Use 'guide' or 'agent'${NC}"
-        exit 1
-        ;;
-esac
 
 cd "$REPO_DIR"
 

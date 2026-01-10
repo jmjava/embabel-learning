@@ -1,42 +1,43 @@
 #!/bin/bash
 # View and analyze a specific PR from upstream
-# Usage: ./view-pr.sh [guide|agent] <PR_NUMBER>
+# Usage: ./view-pr.sh <repo-name> <PR_NUMBER>
 
 set -e
 
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
+
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [guide|agent] <PR_NUMBER>"
+    echo "Usage: $0 <repo-name> <PR_NUMBER>"
     echo "Example: $0 guide 123"
+    echo ""
+    echo "Available repos (cloned in $BASE_DIR):"
+    find "$BASE_DIR" -maxdepth 1 -type d -not -path "$BASE_DIR" 2>/dev/null | \
+        xargs -I {} basename {} | \
+        head -10 || echo "  (none found)"
     exit 1
 fi
 
-REPO=$1
+REPO_NAME=$1
 PR_NUM=$2
 
-GUIDE_DIR="$HOME/github/jmjava/guide"
-AGENT_DIR="$HOME/github/jmjava/embabel-agent"
+REPO_DIR="$BASE_DIR/$REPO_NAME"
+UPSTREAM_REPO="${UPSTREAM_ORG}/$REPO_NAME"
+
+if [ ! -d "$REPO_DIR" ] || [ ! -d "$REPO_DIR/.git" ]; then
+    echo -e "${RED}❌ Repository not found: $REPO_DIR${NC}"
+    echo "Make sure the repository is cloned to $BASE_DIR"
+    exit 1
+fi
+
+cd "$REPO_DIR"
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
-
-case "$REPO" in
-    guide)
-        REPO_DIR="$GUIDE_DIR"
-        UPSTREAM_REPO="embabel/guide"
-        ;;
-    agent)
-        REPO_DIR="$AGENT_DIR"
-        UPSTREAM_REPO="embabel/embabel-agent"
-        ;;
-    *)
-        echo "Invalid repo. Use 'guide' or 'agent'"
-        exit 1
-        ;;
-esac
-
-cd "$REPO_DIR"
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}📋 Analyzing PR #$PR_NUM in $UPSTREAM_REPO${NC}"
