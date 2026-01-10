@@ -1,12 +1,13 @@
 #!/bin/bash
-# Embabel Project Change Monitor
+# Upstream Organization Project Change Monitor
 # Run this daily/weekly to see what's new
 
 set -e
 
-GUIDE_DIR="$HOME/github/jmjava/guide"
-AGENT_DIR="$HOME/github/jmjava/embabel-agent"
-DICE_DIR="$HOME/github/jmjava/dice"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -15,8 +16,28 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}Embabel Project Change Monitor${NC}"
+echo -e "${GREEN}${UPSTREAM_ORG} Project Change Monitor${NC}"
 echo -e "${GREEN}========================================${NC}\n"
+
+# Determine which repos to monitor
+if [ -n "$MONITOR_REPOS" ]; then
+    # Use configured list
+    REPOS_TO_MONITOR="$MONITOR_REPOS"
+else
+    # Auto-detect from cloned repos in BASE_DIR
+    echo -e "${YELLOW}📋 Auto-detecting repositories to monitor...${NC}"
+    REPOS_TO_MONITOR=$(find "$BASE_DIR" -maxdepth 1 -type d -not -path "$BASE_DIR" | \
+        xargs -I {} basename {} | \
+        head -"${MAX_MONITOR_REPOS:-10}" | \
+        tr '\n' ' ')
+    REPOS_TO_MONITOR=$(echo "$REPOS_TO_MONITOR" | xargs)  # Trim whitespace
+    if [ -z "$REPOS_TO_MONITOR" ]; then
+        echo -e "${YELLOW}⚠️  No repositories found to monitor${NC}"
+        echo "Set MONITOR_REPOS in config.sh or clone repositories to $BASE_DIR"
+        exit 0
+    fi
+    echo -e "${GREEN}✓ Found repositories: $REPOS_TO_MONITOR${NC}\n"
+fi
 
 # Function to monitor a repo
 monitor_repo() {
@@ -72,27 +93,23 @@ monitor_repo() {
     echo ""
 }
 
-# Monitor guide repo
-if [ -d "$GUIDE_DIR" ]; then
-    monitor_repo "$GUIDE_DIR" "guide" "embabel" "guide"
-else
-    echo "⚠️  Guide directory not found: $GUIDE_DIR"
-fi
+# Monitor each configured repo
+MONITORED_COUNT=0
+for repo_name in $REPOS_TO_MONITOR; do
+    repo_dir="$BASE_DIR/$repo_name"
+    if [ -d "$repo_dir" ] && [ -d "$repo_dir/.git" ]; then
+        monitor_repo "$repo_dir" "$repo_name" "$UPSTREAM_ORG" "$repo_name"
+        MONITORED_COUNT=$((MONITORED_COUNT + 1))
+    else
+        echo -e "${YELLOW}⚠️  Repository directory not found or not a git repo: $repo_dir${NC}"
+    fi
+done
 
-# Monitor embabel-agent repo
-if [ -d "$AGENT_DIR" ]; then
-    monitor_repo "$AGENT_DIR" "embabel-agent" "embabel" "embabel-agent"
-else
-    echo "⚠️  Embabel-agent directory not found: $AGENT_DIR"
-fi
-
-# Monitor dice repo
-if [ -d "$DICE_DIR" ]; then
-    monitor_repo "$DICE_DIR" "dice" "embabel" "dice"
-else
-    echo "⚠️  Dice directory not found: $DICE_DIR"
+if [ $MONITORED_COUNT -eq 0 ]; then
+    echo -e "${YELLOW}⚠️  No repositories were monitored${NC}"
+    echo "Check that repositories exist in $BASE_DIR or update MONITOR_REPOS in config.sh"
 fi
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}✓ Monitoring complete!${NC}"
+echo -e "${GREEN}✓ Monitoring complete! (monitored $MONITORED_COUNT repositories)${NC}"
 echo -e "${GREEN}========================================${NC}"

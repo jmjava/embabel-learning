@@ -1,0 +1,38 @@
+#!/bin/bash
+# Configuration for organization-learning workspace
+# Copy this file to config.sh and customize for your setup
+#
+# Usage:
+#   1. Copy: cp config.sh.example config.sh
+#   2. Edit: nano config.sh (or your preferred editor)
+#   3. Customize the values below
+
+# Your GitHub username
+export YOUR_GITHUB_USER="your-username"
+
+# The organization you want to monitor/contribute to
+export UPSTREAM_ORG="organization-name"
+
+# Base directory where you clone repositories
+# Default: ~/github/${YOUR_GITHUB_USER}
+export BASE_DIR="${HOME}/github/${YOUR_GITHUB_USER}"
+
+# This workspace directory (embabel-learning or your custom name)
+# This will be auto-detected, but you can override it
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+export LEARNING_DIR="${LEARNING_DIR:-${SCRIPT_DIR}}"
+
+# Optional: Specific repositories to monitor in monitor script
+# Space-separated list of repo names (without .git extension)
+# Leave empty to auto-detect from cloned repos in BASE_DIR
+# Example: MONITOR_REPOS="guide embabel-agent dice"
+export MONITOR_REPOS=""
+
+# Optional: Workspace name for Cursor/VS Code workspace file
+# Default: ${UPSTREAM_ORG}-workspace
+export WORKSPACE_NAME="${UPSTREAM_ORG}-workspace"
+
+# Optional: Maximum number of repos to auto-detect for monitoring
+# If MONITOR_REPOS is empty, this limits how many repos will be monitored
+export MAX_MONITOR_REPOS=10
+
