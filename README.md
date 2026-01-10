@@ -1,8 +1,31 @@
-# 🎓 Embabel Learning Workspace
+# 🎓 Organization Learning Workspace
 
-Your central hub for learning, monitoring, and contributing to the [Embabel ecosystem](https://github.com/orgs/embabel/repositories).
+Your central hub for learning, monitoring, and contributing to any GitHub organization's repositories.
 
 > **📖 Need detailed information?** See [docs/EMBABEL-WORKFLOW.md](docs/EMBABEL-WORKFLOW.md) for comprehensive guides on PR reviews, contribution tracking, session notes, and more.
+
+## ⚙️ Configuration
+
+**First-time setup:** This workspace is now generic and works with any GitHub organization!
+
+1. **Copy and configure:**
+   ```bash
+   cp config.sh.example config.sh
+   # Edit config.sh with your settings:
+   # - YOUR_GITHUB_USER: Your GitHub username
+   # - UPSTREAM_ORG: The organization you want to monitor
+   # - BASE_DIR: Where you clone repositories (default: ~/github/YOUR_GITHUB_USER)
+   # - MONITOR_REPOS: Optional - specific repos to monitor (space-separated)
+   ```
+
+2. **The workspace will use these defaults if `config.sh` is missing:**
+   - `UPSTREAM_ORG=embabel`
+   - `YOUR_GITHUB_USER=jmjava`
+   - `BASE_DIR=~/github/jmjava`
+
+   > **Note:** A warning will be shown when using defaults. Create `config.sh` to customize.
+
+See [CONFIGURATION.md](CONFIGURATION.md) for detailed configuration options.
 
 ## 🎯 Common Tasks (Quick Reference)
 
@@ -11,9 +34,9 @@ Your central hub for learning, monitoring, and contributing to the [Embabel ecos
 | **Check what needs attention** | `eactions`          |
 | **Check if repos are in sync** | `esyncstatus all`   |
 | **Sync repositories**          | `esync`             |
-| **Reset fork to upstream**     | `ereset agent`      |
+| **Reset fork to upstream**     | `ereset <repo-name>` |
 | **Safe push (with checks)**    | `epush`             |
-| **Review a PR**                | `ereview agent 123` |
+| **Review a PR**                | `epr <repo-name> <pr-number>` |
 | **Daily monitoring**           | `em`                |
 | **List all repos**             | `elist`             |
 | **Your contributions**         | `emy`               |
@@ -25,29 +48,35 @@ Your central hub for learning, monitoring, and contributing to the [Embabel ecos
 ## 🚀 Quick Start (5 minutes)
 
 ```bash
-# 1. Set up convenient aliases
-cd ~/github/jmjava/embabel-learning
+# 1. Configure for your organization (REQUIRED for first-time setup)
+cd /path/to/organization-learning  # or clone this repo
+cp config.sh.example config.sh
+# Edit config.sh with YOUR_GITHUB_USER and UPSTREAM_ORG
+
+# 2. Set up convenient aliases
 source scripts/setup-aliases.sh
 source ~/.bash_aliases
 
-# 2. List all embabel repos and their status
+# 3. List all organization repos and their status
 elist
 
-# 3. Fork all embabel repositories (23 repos to fork)
+# 4. Fork all organization repositories
 efork
 
-# 4. Clone the repos you want to work with
+# 5. Clone the repos you want to work with
 eclone
 
-# 5. Set up upstream tracking
+# 6. Set up upstream tracking
 scripts/setup-upstreams.sh
 
-# 6. Set up pre-commit hooks and GitGuardian (recommended)
+# 7. Set up pre-commit hooks and GitGuardian (recommended)
 ./scripts/setup-pre-commit.sh
 
-# 7. Start monitoring daily
+# 8. Start monitoring daily
 em
 ```
+
+> **Configuration required:** Make sure to create `config.sh` from `config.sh.example` before running the scripts. See [CONFIGURATION.md](CONFIGURATION.md) for details.
 
 ## 📁 Project Structure
 
@@ -82,8 +111,8 @@ embabel-learning/
 
 | Script                   | Alias    | Description                                      |
 | ------------------------ | -------- | ------------------------------------------------ |
-| `list-embabel-repos.sh`  | `elist`  | Show all 25 embabel repos with fork/clone status |
-| `fork-all-embabel.sh`    | `efork`  | Fork all embabel repos you haven't forked yet    |
+| `list-embabel-repos.sh`  | `elist`  | Show all organization repos with fork/clone status |
+| `fork-all-embabel.sh`    | `efork`  | Fork all organization repos you haven't forked yet    |
 | `clone-embabel-repos.sh` | `eclone` | Clone your forked repositories                   |
 | `setup-upstreams.sh`     | -        | Configure upstream remotes for tracking          |
 
@@ -91,10 +120,10 @@ embabel-learning/
 
 | Script                | Alias      | Description                                   |
 | --------------------- | ---------- | --------------------------------------------- |
-| `monitor-embabel.sh`  | `em`       | Check PRs, releases, commits across all repos |
-| `sync-upstream.sh`    | `esync`    | Sync your fork with upstream changes          |
-| `compare-branches.sh` | `ecompare` | Compare your fork with upstream               |
-| `view-pr.sh`          | `epr`      | Deep dive into a specific PR                  |
+| `monitor-embabel.sh`  | `em`       | Check PRs, releases, commits across configured repos |
+| `sync-upstream.sh`    | `esync`    | Sync your fork with upstream changes (use `esync <repo-name>` or `esync all`) |
+| `compare-branches.sh` | `ecompare` | Compare your fork with upstream (use `ecompare <repo-name>` or `ecompare all`) |
+| `view-pr.sh`          | `epr`      | Deep dive into a specific PR (use `epr <repo-name> <pr-number>`) |
 
 ### Your Contribution Tracking
 
@@ -136,57 +165,43 @@ embabel-learning/
 
 | Alias        | Goes To                    |
 | ------------ | -------------------------- |
-| `elearn`     | embabel-learning directory |
-| `eguide`     | guide repository           |
-| `eagent`     | embabel-agent repository   |
-| `eworkspace` | Open workspace (all repos) |
+| `elearn`     | learning workspace directory |
+| `eworkspace` | Open workspace (all configured repos) |
 
-## 🎯 Current Status (as of Dec 23, 2025)
+**Repo-specific aliases** (dynamically generated from `MONITOR_REPOS`):
+- `e<repo-name>` - Navigate to a specific repo (e.g., `eguide`, `eagent`)
+- These are automatically created based on your `MONITOR_REPOS` configuration
 
-### Embabel Organization Stats
+## 🎯 Getting Started with Your Organization
 
-- **Total Repositories:** 25 (all active, non-archived)
-- **Most Starred:** embabel-agent (⭐ 2,958)
-- **Your Forks:** 2 (guide, embabel-agent)
-- **To Fork:** 23 repositories
+Once configured, you can:
 
-### Top Repositories to Explore
+1. **View organization statistics:**
+   ```bash
+   elist  # Shows all repos in your configured UPSTREAM_ORG
+   ```
 
-Based on [https://github.com/orgs/embabel/repositories](https://github.com/orgs/embabel/repositories):
+2. **Check current status:**
+   ```bash
+   em        # Monitor daily changes
+   esummary  # Get comprehensive summary
+   ```
 
-1. **[embabel-agent](https://github.com/embabel/embabel-agent)** ⭐ 2,958
+3. **Explore repositories:**
+   - Use `elist` to see all repositories
+   - Fork interesting ones with `efork`
+   - Clone what you want to work with using `eclone`
+   - Set up upstream tracking with `setup-upstreams.sh`
 
-   - Main agent framework for the JVM
-   - Latest: v0.3.1 (released Dec 23, 2025)
-   - Active development with 2 open PRs
+### Example: Working with Any Organization
 
-2. **[embabel-agent-examples](https://github.com/embabel/embabel-agent-examples)** ⭐ 135
+This workspace is generic! You can use it with:
+- **Embabel** (default): `UPSTREAM_ORG=embabel`
+- **Spring Framework**: `UPSTREAM_ORG=spring-projects`
+- **Apache Projects**: `UPSTREAM_ORG=apache`
+- **Any GitHub organization**: Just set `UPSTREAM_ORG` in `config.sh`
 
-   - Examples for Java & Kotlin developers
-   - Great learning resource
-
-3. **[tripper](https://github.com/embabel/tripper)** ⭐ 112
-
-   - Travel planner agent
-   - Real-world agent example
-
-4. **[java-agent-template](https://github.com/embabel/java-agent-template)** ⭐ 109
-
-   - Template for creating Java agents
-   - Good starting point for new projects
-
-5. **[coding-agent](https://github.com/embabel/coding-agent)** ⭐ 51
-   - Agentic flow for software engineers
-   - Meta project!
-
-### Other Interesting Projects
-
-- **[guide](https://github.com/embabel/guide)** - Talk to the docs (you have this!)
-- **[ragbot](https://github.com/embabel/ragbot)** - RAG demo
-- **[flicker](https://github.com/embabel/flicker)** - Movie finder agent
-- **[decker](https://github.com/embabel/decker)** - Slide deck creation agent
-- **[shepherd](https://github.com/embabel/shepherd)** - Community manager
-- **[awesome-embabel](https://github.com/embabel/awesome-embabel)** - Curated resources
+> **Note:** The examples in this README use "embabel" as a default, but all scripts work with any organization once configured.
 
 ## 📖 Usage Examples
 
@@ -215,23 +230,26 @@ eclone
 # 3. Set up tracking
 scripts/setup-upstreams.sh
 
-# 4. Start exploring
-cd ~/github/jmjava/tripper
+# 4. Start exploring (use your configured BASE_DIR)
+cd $BASE_DIR/<repo-name>  # or use dynamically generated alias: e<repo-name>
 glog  # view recent commits
 ```
 
 ### Analyzing a PR
 
 ```bash
-# View PR in embabel-agent
+# View PR in any repository
+epr <repo-name> <pr-number>
+
+# Example: View PR #1204 in a repo called "agent"
 epr agent 1204
 
 # Or checkout locally to test
-cd ~/github/jmjava/embabel-agent
-gh pr checkout 1204 --repo embabel/embabel-agent
+cd $BASE_DIR/<repo-name>
+gh pr checkout <pr-number> --repo ${UPSTREAM_ORG}/<repo-name>
 
 # Test it...
-mvn clean install
+mvn clean install  # or appropriate build command
 
 # Return to your branch
 git checkout main
@@ -385,12 +403,11 @@ em
 
 ### 2. Selective Cloning
 
-You don't need to clone all 25 repos. Start with:
+You don't need to clone all repos. Start with a few key repositories:
 
-- `embabel-agent` (the core)
-- `embabel-agent-examples` (learning)
-- `guide` (documentation)
-- One or two example projects that interest you
+- Use `elist` to see all available repositories
+- Fork and clone 2-3 repos that interest you most
+- Expand later as you learn more
 
 ### 3. Use GitLens
 
@@ -405,8 +422,8 @@ Open any file in Cursor and see:
 PRs are the best learning resource:
 
 ```bash
-gh pr list --repo embabel/embabel-agent --state all --limit 20
-epr agent <number>
+gh pr list --repo ${UPSTREAM_ORG}/<repo-name> --state all --limit 20
+epr <repo-name> <number>
 ```
 
 ### 5. Take Notes
@@ -414,44 +431,44 @@ epr agent <number>
 Document your learning in `notes/`:
 
 ```bash
-cd ~/github/jmjava/embabel-learning/notes
-echo "# Understanding embabel-agent architecture" > architecture.md
+cd $LEARNING_DIR/notes
+echo "# Understanding project architecture" > architecture.md
 ```
 
-## 🛡️ Safety: No Commits to Embabel Organization
+## 🛡️ Safety: No Commits to Upstream Organization
 
-**CRITICAL SAFETY FEATURE:** This workspace is configured to **PREVENT** any commits or pushes to embabel organization repositories.
+**CRITICAL SAFETY FEATURE:** This workspace is configured to **PREVENT** any commits or pushes to upstream organization repositories.
 
 ### What's Protected
 
 ✅ **Automatic blocking** of:
 
-- Commits when `origin` points to embabel
-- Pushes to embabel organization
-- Accidental modifications to embabel repos
+- Commits when `origin` points to upstream organization
+- Pushes to upstream organization
+- Accidental modifications to upstream org repos
 
 ✅ **Allowed operations:**
 
-- Reading embabel repos
-- Syncing FROM embabel (pull/merge)
-- Committing to YOUR forks (jmjava/...)
+- Reading upstream organization repos
+- Syncing FROM upstream (pull/merge)
+- Committing to YOUR forks (${YOUR_GITHUB_USER}/...)
 - Pushing to YOUR forks
 
 ### How It Works
 
-1. **Git Hooks** - Installed automatically to block commits/pushes
+1. **Git Hooks** - Installed automatically to block commits/pushes (via `install-git-safety-hooks.sh`)
 2. **Script Safety Checks** - All scripts check before operations
 3. **Remote Validation** - Verifies `origin` points to your fork
 
-### Contributing to Embabel
+### Contributing to Upstream Organization
 
-To contribute to embabel projects:
+To contribute to upstream organization projects:
 
 1. **Work on your fork:**
 
    ```bash
    # Make sure origin points to YOUR fork
-   git remote set-url origin git@github.com:jmjava/REPO_NAME.git
+   git remote set-url origin git@github.com:${YOUR_GITHUB_USER}/REPO_NAME.git
    ```
 
 2. **Make changes and commit:**
@@ -464,10 +481,10 @@ To contribute to embabel projects:
 
 3. **Create PR from your fork:**
    ```bash
-   gh pr create --repo embabel/REPO_NAME
+   gh pr create --repo ${UPSTREAM_ORG}/REPO_NAME
    ```
 
-**Never commit directly to embabel repos - always work through your fork!**
+**Never commit directly to upstream organization repos - always work through your fork!**
 
 ---
 
@@ -480,7 +497,7 @@ This repository includes **GitGuardian** secret scanning and **pre-commit** hook
 Run the setup script:
 
 ```bash
-cd ~/github/jmjava/embabel-learning
+cd $LEARNING_DIR  # or your learning workspace directory
 ./scripts/setup-pre-commit.sh
 ```
 
