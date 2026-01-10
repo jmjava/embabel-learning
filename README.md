@@ -23,12 +23,14 @@ Your central hub for learning, monitoring, and contributing to any GitHub organi
 ### Option 2: Using config.sh File (Backward Compatibility)
 
 1. **Copy and configure:**
+
    ```bash
    cp config.sh.example config.sh
    # Edit config.sh with your settings (same variables as .env)
    ```
 
 2. **The workspace will use these defaults if neither `.env` nor `config.sh` is found:**
+
    - `UPSTREAM_ORG=embabel`
    - `YOUR_GITHUB_USER=jmjava`
    - `BASE_DIR=~/github/jmjava`
@@ -41,21 +43,21 @@ See [CONFIGURATION.md](CONFIGURATION.md) for detailed configuration options.
 
 ## 🎯 Common Tasks (Quick Reference)
 
-| What You Want to Do            | Command             |
-| ------------------------------ | ------------------- |
-| **Check what needs attention** | `eactions`          |
-| **Check if repos are in sync** | `esyncstatus all`   |
-| **Sync repositories**          | `esync`             |
-| **Reset fork to upstream**     | `ereset <repo-name>` |
-| **Safe push (with checks)**    | `epush`             |
+| What You Want to Do            | Command                       |
+| ------------------------------ | ----------------------------- |
+| **Check what needs attention** | `eactions`                    |
+| **Check if repos are in sync** | `esyncstatus all`             |
+| **Sync repositories**          | `esync`                       |
+| **Reset fork to upstream**     | `ereset <repo-name>`          |
+| **Safe push (with checks)**    | `epush`                       |
 | **Review a PR**                | `epr <repo-name> <pr-number>` |
-| **Daily monitoring**           | `em`                |
-| **List all repos**             | `elist`             |
-| **Your contributions**         | `emy`               |
-| **Generate weekly notes**      | `eweek`             |
-| **Generate daily checklist**   | `echecklist`        |
-| **Catch up after break**       | `ecatchup`          |
-| **Embabel repo summaries**     | `esummary`          |
+| **Daily monitoring**           | `em`                          |
+| **List all repos**             | `elist`                       |
+| **Your contributions**         | `emy`                         |
+| **Generate weekly notes**      | `eweek`                       |
+| **Generate daily checklist**   | `echecklist`                  |
+| **Catch up after break**       | `ecatchup`                    |
+| **Embabel repo summaries**     | `esummary`                    |
 
 ## 🚀 Quick Start (5 minutes)
 
@@ -122,21 +124,21 @@ embabel-learning/
 
 ### Repository Management
 
-| Script                   | Alias    | Description                                      |
-| ------------------------ | -------- | ------------------------------------------------ |
+| Script                   | Alias    | Description                                        |
+| ------------------------ | -------- | -------------------------------------------------- |
 | `list-embabel-repos.sh`  | `elist`  | Show all organization repos with fork/clone status |
-| `fork-all-embabel.sh`    | `efork`  | Fork all organization repos you haven't forked yet    |
-| `clone-embabel-repos.sh` | `eclone` | Clone your forked repositories                   |
-| `setup-upstreams.sh`     | -        | Configure upstream remotes for tracking          |
+| `fork-all-embabel.sh`    | `efork`  | Fork all organization repos you haven't forked yet |
+| `clone-embabel-repos.sh` | `eclone` | Clone your forked repositories                     |
+| `setup-upstreams.sh`     | -        | Configure upstream remotes for tracking            |
 
 ### Daily Monitoring & Sync
 
-| Script                | Alias      | Description                                   |
-| --------------------- | ---------- | --------------------------------------------- |
-| `monitor-embabel.sh`  | `em`       | Check PRs, releases, commits across configured repos |
-| `sync-upstream.sh`    | `esync`    | Sync your fork with upstream changes (use `esync <repo-name>` or `esync all`) |
+| Script                | Alias      | Description                                                                    |
+| --------------------- | ---------- | ------------------------------------------------------------------------------ |
+| `monitor-embabel.sh`  | `em`       | Check PRs, releases, commits across configured repos                           |
+| `sync-upstream.sh`    | `esync`    | Sync your fork with upstream changes (use `esync <repo-name>` or `esync all`)  |
 | `compare-branches.sh` | `ecompare` | Compare your fork with upstream (use `ecompare <repo-name>` or `ecompare all`) |
-| `view-pr.sh`          | `epr`      | Deep dive into a specific PR (use `epr <repo-name> <pr-number>`) |
+| `view-pr.sh`          | `epr`      | Deep dive into a specific PR (use `epr <repo-name> <pr-number>`)               |
 
 ### Your Contribution Tracking
 
@@ -176,12 +178,13 @@ embabel-learning/
 | ------------------- | ------------ | ----------------------------------- |
 | `open-workspace.sh` | `eworkspace` | Open multi-repo workspace in Cursor |
 
-| Alias        | Goes To                    |
-| ------------ | -------------------------- |
-| `elearn`     | learning workspace directory |
+| Alias        | Goes To                               |
+| ------------ | ------------------------------------- |
+| `elearn`     | learning workspace directory          |
 | `eworkspace` | Open workspace (all configured repos) |
 
 **Repo-specific aliases** (dynamically generated from `MONITOR_REPOS`):
+
 - `e<repo-name>` - Navigate to a specific repo (e.g., `eguide`, `eagent`)
 - These are automatically created based on your `MONITOR_REPOS` configuration
 
@@ -190,11 +193,13 @@ embabel-learning/
 Once configured, you can:
 
 1. **View organization statistics:**
+
    ```bash
    elist  # Shows all repos in your configured UPSTREAM_ORG
    ```
 
 2. **Check current status:**
+
    ```bash
    em        # Monitor daily changes
    esummary  # Get comprehensive summary
@@ -209,6 +214,7 @@ Once configured, you can:
 ### Example: Working with Any Organization
 
 This workspace is generic! You can use it with:
+
 - **Embabel** (default): `UPSTREAM_ORG=embabel`
 - **Spring Framework**: `UPSTREAM_ORG=spring-projects`
 - **Apache Projects**: `UPSTREAM_ORG=apache`
@@ -469,8 +475,13 @@ echo "# Understanding project architecture" > architecture.md
 
 ### How It Works
 
-1. **Git Hooks** - Installed automatically to block commits/pushes (via `install-git-safety-hooks.sh`)
-2. **Script Safety Checks** - All scripts check before operations
+1. **Pre-commit Hooks** - Integrated into pre-commit framework, runs automatically on every commit
+   - Uses `UPSTREAM_ORG` from your `.env` file
+   - Blocks commits if repository origin points to upstream org
+   - Allows commits only to your forks (`YOUR_GITHUB_USER`)
+   - See [Security & Pre-commit Hooks](#-security--pre-commit-hooks) section for details
+2. **Git Push Hooks** - Installed via `install-git-safety-hooks.sh` to block pushes
+3. **Script Safety Checks** - All scripts check before operations
 3. **Remote Validation** - Verifies `origin` points to your fork
 
 ### Contributing to Upstream Organization
@@ -530,6 +541,14 @@ This will:
 - ✅ **Private key detection** - Detects SSH keys, certificates
 - ✅ **AWS credentials detection** - Scans for AWS keys
 
+**Safety Checks:**
+
+- ✅ **Block upstream commits** - Prevents accidental commits to upstream organization repos
+  - Uses `UPSTREAM_ORG` from your `.env` file
+  - Automatically blocks commits to upstream org repos
+  - Allows commits only to your forks (`YOUR_GITHUB_USER`)
+  - Integrated into pre-commit framework - runs on every commit
+
 **Code Quality Checks:**
 
 - ✅ **Shell script linting** (shellcheck)
@@ -587,8 +606,21 @@ This automatically:
 
 ```bash
 git commit -m "Your message"
-# Pre-commit hooks run automatically
+# Pre-commit hooks run automatically:
+# 1. GitGuardian secret scanning (ggshield)
+# 2. Safety checks (block-upstream-commit)
+# 3. All other hooks (linting, formatting, etc.)
 ```
+
+**Important:** All commits automatically run:
+- ✅ **GitGuardian secret scanning** - Scans for secrets before commit
+- ✅ **Safety checks** - Prevents commits to upstream org repos (uses `UPSTREAM_ORG` from `.env`)
+- ✅ **All other hooks** - Linting, formatting, file checks
+
+If any hook fails, the commit is blocked. This ensures:
+- No secrets are committed
+- No accidental commits to upstream org repos
+- Code quality standards are maintained
 
 **Manual:**
 
@@ -690,6 +722,7 @@ brew install python3
 | Check               | What It Does                        | When It Runs             |
 | ------------------- | ----------------------------------- | ------------------------ |
 | GitGuardian         | Scans for secrets, API keys, tokens | Every commit             |
+| Safety Checks       | Prevents commits to upstream org    | Every commit             |
 | detect-secrets      | Additional secret patterns          | Every commit             |
 | shellcheck          | Shell script linting                | On `.sh` files           |
 | yamllint            | YAML validation                     | On `.yaml`, `.yml` files |
