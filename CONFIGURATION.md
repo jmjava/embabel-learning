@@ -29,12 +29,31 @@ Both methods are supported, but `.env` is recommended for consistency with moder
 
 **Example `.env` file:**
 ```bash
+# Your personal GitHub username (for your forks)
 YOUR_GITHUB_USER=your-username
+
+# The organization you want to monitor (can be different from your username!)
 UPSTREAM_ORG=embabel
+
+# Where you clone YOUR forks (under your username)
 BASE_DIR=$HOME/github/your-username
+
+# Which repos from UPSTREAM_ORG you want to monitor
 MONITOR_REPOS=guide embabel-agent dice
+
 WORKSPACE_NAME=embabel-workspace
 MAX_MONITOR_REPOS=10
+```
+
+**Real-world example:**
+```bash
+# Alice wants to monitor Embabel repos
+YOUR_GITHUB_USER=alice
+UPSTREAM_ORG=embabel  # Monitoring embabel's repos, not alice's org
+
+# Bob wants to monitor Spring Framework
+YOUR_GITHUB_USER=bob
+UPSTREAM_ORG=spring-projects  # Monitoring spring-projects, not bob's org
 ```
 
 > **Note:** The `.env` file is git-ignored and should never be committed. It contains user-specific settings.
@@ -66,33 +85,60 @@ MAX_MONITOR_REPOS=10
 
 3. **That's it!** All scripts will now use your configuration.
 
+## Understanding the Two Key Variables
+
+**Important Distinction:**
+- **`YOUR_GITHUB_USER`**: Your personal GitHub username (where YOUR forks live)
+- **`UPSTREAM_ORG`**: The organization you want to **monitor** (can be completely different!)
+
+**Example Scenario:**
+- Your GitHub username: `alice`
+- Organization you want to monitor: `embabel`
+- Your config:
+  ```bash
+  YOUR_GITHUB_USER=alice        # Your personal account
+  UPSTREAM_ORG=embabel          # Organization to monitor (different!)
+  ```
+- Result: Scripts will monitor `embabel/*` repos, fork them to `alice/*`, and you'll contribute back to `embabel`
+
 ## Configuration Variables
 
 ### `YOUR_GITHUB_USER` (Required)
 
-Your GitHub username. Used for:
-- Forking repositories (`gh repo fork`)
-- Cloning your forks
-- Identifying your contributions
-- Setting up git remotes
+Your personal GitHub username. Used for:
+- Forking repositories from `UPSTREAM_ORG` to your account (`gh repo fork`)
+- Cloning YOUR forks (not the upstream org's repos directly)
+- Identifying your contributions in PRs
+- Setting up git remotes (origin = your fork, upstream = org's repo)
 
 **Example:**
 ```bash
 YOUR_GITHUB_USER="alice"
 ```
 
+**Note:** This can be different from the organization you monitor. You might be `alice` but want to monitor `embabel` repos.
+
 ### `UPSTREAM_ORG` (Required)
 
-The GitHub organization whose repositories you want to monitor. This can be:
+The GitHub organization whose repositories you want to **monitor and learn from**. This can be:
+- **Different from your personal organization/user** (most common use case)
 - `embabel` (default)
 - `spring-projects`
 - `apache`
 - `kubernetes`
 - Any GitHub organization name
 
+**Important:** This is the organization you want to monitor, NOT your personal GitHub organization. For example:
+- If you want to monitor Embabel's repos: `UPSTREAM_ORG="embabel"` (even if your username is different)
+- If you want to monitor Spring Framework: `UPSTREAM_ORG="spring-projects"` (even if your username is different)
+
 **Example:**
 ```bash
-UPSTREAM_ORG="spring-projects"
+# Your personal GitHub username
+YOUR_GITHUB_USER="alice"
+
+# The organization you want to monitor (can be different!)
+UPSTREAM_ORG="embabel"  # Monitoring embabel, not alice's org
 ```
 
 ### `BASE_DIR` (Optional)
@@ -135,44 +181,59 @@ MONITOR_REPOS="guide embabel-agent"
 
 ## Examples
 
-### Example 1: Embabel (Default)
+### Example 1: Monitoring Embabel (Default)
+
+**Scenario:** Your username is `jmjava`, but you want to monitor `embabel` repos.
 
 ```bash
-# config.sh
-YOUR_GITHUB_USER="jmjava"
-UPSTREAM_ORG="embabel"
+# .env or config.sh
+YOUR_GITHUB_USER="jmjava"          # YOUR personal GitHub username
+UPSTREAM_ORG="embabel"              # Organization to MONITOR (different!)
 BASE_DIR="$HOME/github/jmjava"
 MONITOR_REPOS="guide embabel-agent dice"
 ```
 
-### Example 2: Spring Framework
+**How it works:**
+- Scripts monitor: `github.com/embabel/*` repos
+- Your forks: `github.com/jmjava/*` repos
+- Safety checks block pushing to `embabel/*` repos
+- You contribute by forking to `jmjava/*` and creating PRs back to `embabel`
+
+### Example 2: Monitoring Spring Framework
+
+**Scenario:** Your username is `alice`, but you want to monitor `spring-projects` repos.
 
 ```bash
-# config.sh
-YOUR_GITHUB_USER="alice"
-UPSTREAM_ORG="spring-projects"
+# .env or config.sh
+YOUR_GITHUB_USER="alice"            # YOUR personal GitHub username
+UPSTREAM_ORG="spring-projects"      # Organization to MONITOR (different!)
 BASE_DIR="$HOME/github/alice"
 MONITOR_REPOS="spring-boot spring-framework spring-data"
 ```
 
-### Example 3: Apache Projects
+### Example 3: You Have a Test Organization
+
+**Scenario:** Your username is `bob`, you have a test org `testorg`, but you want to monitor `embabel`.
 
 ```bash
-# config.sh
-YOUR_GITHUB_USER="bob"
-UPSTREAM_ORG="apache"
-BASE_DIR="$HOME/code/apache-repos"
-MONITOR_REPOS="kafka hadoop spark"  # Or leave empty to monitor all
+# .env or config.sh
+YOUR_GITHUB_USER="bob"              # YOUR personal GitHub username
+UPSTREAM_ORG="embabel"              # Organization to MONITOR (not testorg!)
+BASE_DIR="$HOME/github/bob"
+MONITOR_REPOS="guide embabel-agent"
+
+# Note: Even though you have testorg, you're monitoring embabel's repos
+# If you wanted to monitor testorg instead, set: UPSTREAM_ORG="testorg"
 ```
 
-### Example 4: Custom Setup
+### Example 4: Apache Projects
 
 ```bash
-# config.sh
-YOUR_GITHUB_USER="carol"
-UPSTREAM_ORG="my-company"
-BASE_DIR="/workspace/github-repos"
-# Leave MONITOR_REPOS empty to auto-detect all repos
+# .env or config.sh
+YOUR_GITHUB_USER="bob"              # YOUR personal GitHub username
+UPSTREAM_ORG="apache"               # Organization to MONITOR (different!)
+BASE_DIR="$HOME/code/apache-repos"
+MONITOR_REPOS="kafka hadoop spark"  # Or leave empty to monitor all
 ```
 
 ## How Configuration is Loaded
