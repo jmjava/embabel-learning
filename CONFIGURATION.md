@@ -116,7 +116,11 @@ Your personal GitHub username. Used for:
 YOUR_GITHUB_USER="alice"
 ```
 
-**Note:** This can be different from the organization you monitor. You might be `alice` but want to monitor `embabel` repos.
+**Important Notes:**
+- This is your **personal username**, NOT your organization name
+- If you have a personal organization (e.g., `menkelabs`), that's separate from `YOUR_GITHUB_USER`
+- Example: Username `jmjava` with personal org `menkelabs` → `YOUR_GITHUB_USER="jmjava"` (not "menkelabs")
+- This can be different from the organization you monitor. You might be `alice` but want to monitor `embabel` repos.
 
 ### `UPSTREAM_ORG` (Required)
 
@@ -132,13 +136,20 @@ The GitHub organization whose repositories you want to **monitor and learn from*
 - If you want to monitor Embabel's repos: `UPSTREAM_ORG="embabel"` (even if your username is different)
 - If you want to monitor Spring Framework: `UPSTREAM_ORG="spring-projects"` (even if your username is different)
 
+**Testing vs Production:**
+- **For TESTING the scripts:** Use your personal organization (e.g., `menkelabs`) - safer for testing since it's your own org
+- **For PRODUCTION use:** Use the organization you want to monitor (e.g., `embabel`)
+
 **Example:**
 ```bash
 # Your personal GitHub username
-YOUR_GITHUB_USER="alice"
+YOUR_GITHUB_USER="jmjava"
 
-# The organization you want to monitor (can be different!)
-UPSTREAM_ORG="embabel"  # Monitoring embabel, not alice's org
+# For testing: Use your personal org (safer)
+UPSTREAM_ORG="menkelabs"  # Testing with your own org
+
+# For production: Use the org you want to monitor
+UPSTREAM_ORG="embabel"    # Monitoring embabel repos
 ```
 
 ### `BASE_DIR` (Optional)
@@ -211,19 +222,29 @@ BASE_DIR="$HOME/github/alice"
 MONITOR_REPOS="spring-boot spring-framework spring-data"
 ```
 
-### Example 3: You Have a Test Organization
+### Example 3: Personal Organization vs Monitoring Organization
 
-**Scenario:** Your username is `bob`, you have a test org `testorg`, but you want to monitor `embabel`.
+**Scenario:** Your username is `jmjava`, you have a personal org `menkelabs`, and you want to monitor `embabel`.
 
+**For Testing (using your personal org - safer):**
 ```bash
 # .env or config.sh
-YOUR_GITHUB_USER="bob"              # YOUR personal GitHub username
-UPSTREAM_ORG="embabel"              # Organization to MONITOR (not testorg!)
-BASE_DIR="$HOME/github/bob"
-MONITOR_REPOS="guide embabel-agent"
+YOUR_GITHUB_USER="jmjava"           # YOUR personal GitHub username
+UPSTREAM_ORG="menkelabs"           # Your personal org (safer for testing)
+BASE_DIR="$HOME/github/jmjava"
+MONITOR_REPOS="repo1 repo2"        # Repos from menkelabs to test with
+```
 
-# Note: Even though you have testorg, you're monitoring embabel's repos
-# If you wanted to monitor testorg instead, set: UPSTREAM_ORG="testorg"
+**For Production (monitoring embabel):**
+```bash
+# .env or config.sh
+YOUR_GITHUB_USER="jmjava"           # YOUR personal GitHub username
+UPSTREAM_ORG="embabel"             # Organization to MONITOR (not menkelabs!)
+BASE_DIR="$HOME/github/jmjava"
+MONITOR_REPOS="guide embabel-agent dice"  # Repos from embabel to monitor
+
+# Note: menkelabs is your personal org (good for testing),
+# but UPSTREAM_ORG is what you want to monitor (embabel for production)
 ```
 
 ### Example 4: Apache Projects
