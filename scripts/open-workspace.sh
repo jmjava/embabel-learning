@@ -13,35 +13,49 @@ if [ ! -f "$WORKSPACE_FILE" ]; then
     echo "❌ Workspace file not found at: $WORKSPACE_FILE"
     echo "Creating it now..."
 
-    # Build workspace folders dynamically
-    WORKSPACE_FOLDERS=""
-    if [ -n "$MONITOR_REPOS" ]; then
-        for repo in $MONITOR_REPOS; do
-            WORKSPACE_FOLDERS="${WORKSPACE_FOLDERS}        {\n            \"path\": \"$repo\",\n            \"name\": \"📦 $repo\"\n        },\n"
-        done
-    else
-        # Default to common repos if MONITOR_REPOS not set
-        WORKSPACE_FOLDERS="        {\n            \"path\": \"guide\",\n            \"name\": \"📘 Guide\"\n        },\n        {\n            \"path\": \"embabel-agent\",\n            \"name\": \"🤖 ${UPSTREAM_ORG} Agent\"\n        },\n"
-    fi
+    # Build workspace file dynamically
+    {
+        echo "{"
+        echo "    \"folders\": ["
+        
+        # Add configured repos
+        if [ -n "$MONITOR_REPOS" ]; then
+            for repo in $MONITOR_REPOS; do
+                echo "        {"
+                echo "            \"path\": \"$repo\","
+                echo "            \"name\": \"📦 $repo\""
+                echo "        },"
+            done
+        else
+            # Default to common repos if MONITOR_REPOS not set
+            echo "        {"
+            echo "            \"path\": \"guide\","
+            echo "            \"name\": \"📘 Guide\""
+            echo "        },"
+            echo "        {"
+            echo "            \"path\": \"${UPSTREAM_ORG}-agent\","
+            echo "            \"name\": \"🤖 ${UPSTREAM_ORG} Agent\""
+            echo "        },"
+        fi
+        
+        # Add learning workspace itself
+        WORKSPACE_DIR_NAME=$(basename "$LEARNING_DIR")
+        echo "        {"
+        echo "            \"path\": \"$WORKSPACE_DIR_NAME\","
+        echo "            \"name\": \"🎓 ${UPSTREAM_ORG} Learning\""
+        echo "        }"
+        
+        echo "    ],"
+        echo "    \"settings\": {"
+        echo "        \"gitlens.defaultDateFormat\": \"YYYY-MM-DD HH:mm\","
+        echo "        \"gitlens.showWelcomeOnInstall\": false,"
+        echo "        \"gitlens.currentLine.enabled\": true,"
+        echo "        \"gitlens.hovers.currentLine.over\": \"line\","
+        echo "        \"gitlens.codeLens.enabled\": true"
+        echo "    }"
+        echo "}"
+    } > "$WORKSPACE_FILE"
     
-    # Add learning workspace itself
-    WORKSPACE_DIR_NAME=$(basename "$LEARNING_DIR")
-    WORKSPACE_FOLDERS="${WORKSPACE_FOLDERS}        {\n            \"path\": \"$WORKSPACE_DIR_NAME\",\n            \"name\": \"🎓 ${UPSTREAM_ORG} Learning\"\n        }\n"
-    
-    cat > "$WORKSPACE_FILE" << EOF
-{
-    "folders": [
-${WORKSPACE_FOLDERS}
-    ],
-    "settings": {
-        "gitlens.defaultDateFormat": "YYYY-MM-DD HH:mm",
-        "gitlens.showWelcomeOnInstall": false,
-        "gitlens.currentLine.enabled": true,
-        "gitlens.hovers.currentLine.over": "line",
-        "gitlens.codeLens.enabled": true
-    }
-}
-EOF
     echo "✅ Workspace file created!"
 fi
 
