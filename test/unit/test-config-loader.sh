@@ -140,25 +140,32 @@ EOF
 }
 
 testConfigLoaderWarningMessage() {
-    # Test that warning is shown when config.sh is missing
+    # Test that warning is shown when neither .env nor config.sh is missing
+    # Ensure config files don't exist in test directory
+    rm -f "$LEARNING_DIR/.env" "$LEARNING_DIR/config.sh" 2>/dev/null || true
+    
     local output=$(bash -c "
         export LEARNING_DIR='$LEARNING_DIR'
         unset CONFIG_WARNING_SHOWN
         source '$SCRIPTS_DIR/config-loader.sh' 2>&1
     ")
     
-    assertContains "$output" "config.sh not found" "Should warn when config.sh is missing"
+    # Updated warning message mentions both .env and config.sh
+    assertContains "$output" "No configuration file found" "Should warn when config files are missing"
     assertContains "$output" "Using defaults" "Should mention using defaults"
 }
 
 testConfigLoaderNoDuplicateWarnings() {
     # Test that warning is only shown once
+    # Ensure config files don't exist
+    rm -f "$LEARNING_DIR/.env" "$LEARNING_DIR/config.sh" 2>/dev/null || true
+    
     local output=$(bash -c "
         export LEARNING_DIR='$LEARNING_DIR'
         export CONFIG_WARNING_SHOWN=false
         source '$SCRIPTS_DIR/config-loader.sh' >/dev/null 2>&1
         source '$SCRIPTS_DIR/config-loader.sh' 2>&1
-    " | grep -c "config.sh not found")
+    " | grep -c "No configuration file found")
     
     # Should only see warning once (first time)
     assertTrue "Warning should only appear once per execution" [ "$output" -le 1 ]
