@@ -1,11 +1,13 @@
 #!/bin/bash
 # Check sync status and provide clear instructions to fix
-# Usage: ./check-sync-status.sh [guide|agent|all]
+# Usage: ./check-sync-status.sh [repo-name|all]
 
 set -e
 
-GUIDE_DIR="$HOME/github/jmjava/guide"
-AGENT_DIR="$HOME/github/jmjava/embabel-agent"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -20,7 +22,7 @@ check_repo() {
 
     if [ ! -d "$repo_dir" ]; then
         echo -e "${RED}✗ $repo_name: Not cloned${NC}"
-        echo -e "   ${YELLOW}Run:${NC} cd ~/github/jmjava && git clone git@github.com:jmjava/$repo_name.git"
+        echo -e "   ${YELLOW}Run:${NC} cd $BASE_DIR && git clone git@github.com:${YOUR_GITHUB_USER}/$repo_name.git"
         echo ""
         return
     fi
@@ -46,7 +48,7 @@ check_repo() {
     # Check remotes
     if ! git remote | grep -q "upstream"; then
         echo -e "${RED}✗ Upstream remote not configured${NC}"
-        echo -e "   ${YELLOW}Fix:${NC} git remote add upstream git@github.com:embabel/$repo_name.git"
+        echo -e "   ${YELLOW}Fix:${NC} git remote add upstream git@github.com:${UPSTREAM_ORG}/$repo_name.git"
         echo ""
         return
     fi
@@ -156,23 +158,48 @@ check_repo() {
     fi
 }
 
-case "${1:-all}" in
-    guide)
-        check_repo "$GUIDE_DIR" "guide"
-        ;;
-    agent)
-        check_repo "$AGENT_DIR" "embabel-agent"
-        ;;
-    all)
-        check_repo "$GUIDE_DIR" "guide"
-        echo ""
-        check_repo "$AGENT_DIR" "embabel-agent"
-        ;;
-    *)
-        echo "Usage: $0 [guide|agent|all]"
+# Main logic
+REPO_ARG="${1:-all}"
+
+if [ "$REPO_ARG" = "all" ]; then
+    # Check all configured repos or auto-detect
+    if [ -n "$MONITOR_REPOS" ]; then
+        REPOS_TO_CHECK="$MONITOR_REPOS"
+    else
+        # Auto-detect from cloned repos
+        REPOS_TO_CHECK=$(find "$BASE_DIR" -maxdepth 1 -type d -not -path "$BASE_DIR" | \
+            xargs -I {} basename {} | \
+            grep -v "^\." | \
+            head -"${MAX_MONITOR_REPOS:-10}" | \
+            tr '\n' ' ')
+        REPOS_TO_CHECK=$(echo "$REPOS_TO_CHECK" | xargs)  # Trim whitespace
+    fi
+
+    if [ -z "$REPOS_TO_CHECK" ]; then
+        echo -e "${RED}❌ No repositories found to check${NC}"
+        echo "Set MONITOR_REPOS in config.sh or specify a repo name"
         exit 1
-        ;;
-esac
+    fi
+
+    for repo_name in $REPOS_TO_CHECK; do
+        repo_dir="$BASE_DIR/$repo_name"
+        if [ -d "$repo_dir" ] && [ -d "$repo_dir/.git" ]; then
+            check_repo "$repo_dir" "$repo_name"
+            echo ""
+        fi
+    done
+else
+    # Check specific repo
+    repo_name="$REPO_ARG"
+    repo_dir="$BASE_DIR/$repo_name"
+
+    if [ ! -d "$repo_dir" ] || [ ! -d "$repo_dir/.git" ]; then
+        echo -e "${RED}❌ Repository not found: $repo_dir${NC}"
+        exit 1
+    fi
+
+    check_repo "$repo_dir" "$repo_name"
+fi
 
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}Check complete!${NC}"

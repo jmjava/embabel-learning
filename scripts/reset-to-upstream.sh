@@ -1,14 +1,14 @@
 #!/bin/bash
 # Reset your fork to match upstream exactly (discards local changes)
-# Usage: ./reset-to-upstream.sh [guide|agent|all]
+# Usage: ./reset-to-upstream.sh [repo-name|all]
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 source "$SCRIPT_DIR/safety-checks.sh"
-
-GUIDE_DIR="$HOME/github/jmjava/guide"
-AGENT_DIR="$HOME/github/jmjava/embabel-agent"
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -53,7 +53,7 @@ reset_repo() {
     # Check if upstream is configured
     if ! git remote | grep -q "upstream"; then
         echo -e "${RED}✗ Upstream remote not configured${NC}"
-        echo -e "   ${YELLOW}Run:${NC} git remote add upstream git@github.com:embabel/$repo_name.git"
+        echo -e "   ${YELLOW}Run:${NC} git remote add upstream git@github.com:${UPSTREAM_ORG}/$repo_name.git"
         return
     fi
 
@@ -115,8 +115,8 @@ reset_repo() {
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         # Safety check - make sure origin points to your fork
         local origin_url=$(git remote get-url origin 2>/dev/null || echo "")
-        if [[ "$origin_url" == *"embabel/"* ]] && [[ "$origin_url" != *"jmjava"* ]]; then
-            echo -e "${RED}✗ SAFETY BLOCK: Cannot push to embabel organization${NC}"
+        if [[ "$origin_url" == *"${UPSTREAM_ORG}/"* ]] && [[ "$origin_url" != *"${YOUR_GITHUB_USER}"* ]]; then
+            echo -e "${RED}✗ SAFETY BLOCK: Cannot push to ${UPSTREAM_ORG} organization${NC}"
             echo -e "${YELLOW}Remote URL: $origin_url${NC}"
             return
         fi
@@ -129,23 +129,47 @@ reset_repo() {
     echo ""
 }
 
-case "${1:-all}" in
-    guide)
-        reset_repo "$GUIDE_DIR" "guide"
-        ;;
-    agent)
-        reset_repo "$AGENT_DIR" "embabel-agent"
-        ;;
-    all)
-        reset_repo "$GUIDE_DIR" "guide"
-        echo ""
-        reset_repo "$AGENT_DIR" "embabel-agent"
-        ;;
-    *)
-        echo "Usage: $0 [guide|agent|all]"
+# Main logic
+REPO_ARG="${1:-all}"
+
+if [ "$REPO_ARG" = "all" ]; then
+    # Reset all configured repos or auto-detect
+    if [ -n "$MONITOR_REPOS" ]; then
+        REPOS_TO_RESET="$MONITOR_REPOS"
+    else
+        # Auto-detect from cloned repos
+        REPOS_TO_RESET=$(find "$BASE_DIR" -maxdepth 1 -type d -not -path "$BASE_DIR" | \
+            xargs -I {} basename {} | \
+            grep -v "^\." | \
+            head -"${MAX_MONITOR_REPOS:-10}" | \
+            tr '\n' ' ')
+        REPOS_TO_RESET=$(echo "$REPOS_TO_RESET" | xargs)  # Trim whitespace
+    fi
+
+    if [ -z "$REPOS_TO_RESET" ]; then
+        echo -e "${RED}❌ No repositories found to reset${NC}"
+        echo "Set MONITOR_REPOS in config.sh or specify a repo name"
         exit 1
-        ;;
-esac
+    fi
+
+    for repo_name in $REPOS_TO_RESET; do
+        repo_dir="$BASE_DIR/$repo_name"
+        if [ -d "$repo_dir" ] && [ -d "$repo_dir/.git" ]; then
+            reset_repo "$repo_dir" "$repo_name"
+            echo ""
+        fi
+    done
+else
+    # Reset specific repo
+    repo_name="$REPO_ARG"
+    repo_dir="$BASE_DIR/$repo_name"
+
+    if [ ! -d "$repo_dir" ] || [ ! -d "$repo_dir/.git" ]; then
+        echo -e "${RED}❌ Repository not found: $repo_dir${NC}"
+        exit 1
+    fi
+
+    reset_repo "$repo_dir" "$repo_name"
+fi
 
 echo -e "${GREEN}✓ Reset complete!${NC}"
-

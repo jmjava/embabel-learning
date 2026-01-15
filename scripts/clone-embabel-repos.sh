@@ -1,8 +1,13 @@
 #!/bin/bash
-# Clone all your forked embabel repositories
+# Clone all your forked upstream organization repositories
 # Usage: ./clone-embabel-repos.sh [all|selective]
 
 set -e
+
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -10,21 +15,17 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-YOUR_USER="jmjava"
-EMBABEL_ORG="embabel"
-BASE_DIR="$HOME/github/jmjava"
-
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}Embabel Repository Clone Manager${NC}"
+echo -e "${GREEN}${UPSTREAM_ORG} Repository Clone Manager${NC}"
 echo -e "${GREEN}========================================${NC}\n"
 
-# Get your forked embabel repos
-echo -e "${YELLOW}📋 Fetching your embabel forks...${NC}"
-FORKED_REPOS=$(gh repo list "$YOUR_USER" --fork --limit 100 --json name,parent --jq ".[] | select(.parent.owner.login == \"$EMBABEL_ORG\") | .name" | sort)
+# Get your forked upstream org repos
+echo -e "${YELLOW}📋 Fetching your ${UPSTREAM_ORG} forks...${NC}"
+FORKED_REPOS=$(gh repo list "$YOUR_GITHUB_USER" --fork --limit 100 --json name,parent --jq ".[] | select(.parent.owner.login == \"$UPSTREAM_ORG\") | .name" | sort)
 
 if [ -z "$FORKED_REPOS" ]; then
-    echo -e "${RED}❌ No embabel forks found${NC}"
-    echo "Run ./fork-all-embabel.sh first"
+    echo -e "${RED}❌ No ${UPSTREAM_ORG} forks found${NC}"
+    echo "Run $SCRIPT_DIR/fork-all-embabel.sh first"
     exit 1
 fi
 
@@ -103,7 +104,7 @@ for repo in "${TO_CLONE[@]}"; do
     fi
 
     echo -e "${YELLOW}Cloning $repo...${NC}"
-    if gh repo clone "$YOUR_USER/$repo"; then
+    if gh repo clone "$YOUR_GITHUB_USER/$repo"; then
         echo -e "${GREEN}✓ Successfully cloned $repo${NC}"
         CLONED=$((CLONED + 1))
     else
@@ -128,7 +129,7 @@ if [ $CLONED -gt 0 ]; then
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
     echo "Set up upstream remotes for all cloned repos:"
-    echo "  ./setup-upstreams.sh"
+    echo "  $SCRIPT_DIR/setup-upstreams.sh"
     echo ""
 fi
 

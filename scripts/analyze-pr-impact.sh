@@ -1,22 +1,33 @@
 #!/bin/bash
 # Analyze upstream changes that might affect your PR
-# Usage: ./analyze-pr-impact.sh [guide|agent] <PR_NUMBER>
+# Usage: ./analyze-pr-impact.sh <repo-name> <PR_NUMBER>
 # Example: ./analyze-pr-impact.sh guide 123
 
 set -e
 
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
+
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [guide|agent] <PR_NUMBER>"
+    echo "Usage: $0 <repo-name> <PR_NUMBER>"
     echo "Example: $0 guide 123"
     exit 1
 fi
 
-REPO=$1
+REPO_NAME=$1
 PR_NUM=$2
 
-GUIDE_DIR="$HOME/github/jmjava/guide"
-AGENT_DIR="$HOME/github/jmjava/embabel-agent"
-OUTPUT_DIR="$HOME/github/jmjava/embabel-learning/notes/pr-impact-analysis"
+REPO_DIR="$BASE_DIR/$REPO_NAME"
+OUTPUT_DIR="$LEARNING_DIR/notes/pr-impact-analysis"
+UPSTREAM_REPO="${UPSTREAM_ORG}/$REPO_NAME"
+
+if [ ! -d "$REPO_DIR" ] || [ ! -d "$REPO_DIR/.git" ]; then
+    echo -e "${RED}❌ Repository not found: $REPO_DIR${NC}"
+    echo "Make sure the repository is cloned to $BASE_DIR"
+    exit 1
+fi
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -25,21 +36,6 @@ RED='\033[0;31m'
 CYAN='\033[0;36m'
 GRAY='\033[0;90m'
 NC='\033[0m'
-
-case "$REPO" in
-    guide)
-        REPO_DIR="$GUIDE_DIR"
-        UPSTREAM_REPO="embabel/guide"
-        ;;
-    agent)
-        REPO_DIR="$AGENT_DIR"
-        UPSTREAM_REPO="embabel/embabel-agent"
-        ;;
-    *)
-        echo -e "${RED}Invalid repo. Use 'guide' or 'agent'${NC}"
-        exit 1
-        ;;
-esac
 
 cd "$REPO_DIR"
 
@@ -99,13 +95,13 @@ PR_FILES=$(echo "$PR_INFO" | jq -r '.files[].path' | sort)
 cat > "$OUTPUT_FILE" <<EOF
 # PR Impact Analysis: #$PR_NUM
 
-**PR Title:** $PR_TITLE  
-**Repository:** $UPSTREAM_REPO  
-**State:** $PR_STATE  
-**Base Branch:** $PR_BASE  
-**Head Branch:** $PR_HEAD_OWNER:$PR_HEAD  
-**Created:** $PR_CREATED  
-**Author:** $PR_AUTHOR  
+**PR Title:** $PR_TITLE
+**Repository:** $UPSTREAM_REPO
+**State:** $PR_STATE
+**Base Branch:** $PR_BASE
+**Head Branch:** $PR_HEAD_OWNER:$PR_HEAD
+**Created:** $PR_CREATED
+**Author:** $PR_AUTHOR
 **PR Changes:** +$PR_ADDITIONS / -$PR_DELETIONS lines
 
 **Generated:** $(date)
@@ -162,7 +158,7 @@ if [ -n "$MERGE_BASE" ]; then
     # Get commits in upstream/main since the merge base
     COMMITS=$(git log --oneline "$MERGE_BASE..$UPSTREAM_BRANCH" 2>/dev/null | head -20)
     COMMIT_COUNT=$(git rev-list --count "$MERGE_BASE..$UPSTREAM_BRANCH" 2>/dev/null || echo "0")
-    
+
     cat >> "$OUTPUT_FILE" <<EOF
 
 **Commits in $UPSTREAM_BRANCH since PR base:** $COMMIT_COUNT
@@ -175,20 +171,20 @@ EOF
 
     # Get files changed in upstream
     UPSTREAM_FILES=$(git diff --name-only "$MERGE_BASE..$UPSTREAM_BRANCH" 2>/dev/null | sort)
-    
+
     if [ -n "$UPSTREAM_FILES" ]; then
         cat >> "$OUTPUT_FILE" <<EOF
 
 ### Files Changed in Upstream
 
 EOF
-        
+
         echo "$UPSTREAM_FILES" | while read -r file; do
             if [ -n "$file" ]; then
                 echo "- \`$file\`" >> "$OUTPUT_FILE"
             fi
         done
-        
+
         cat >> "$OUTPUT_FILE" <<EOF
 
 ---
@@ -198,10 +194,10 @@ EOF
 ### Files Modified in Both PR and Upstream
 
 EOF
-        
+
         # Find overlapping files
         OVERLAPPING_FILES=$(comm -12 <(echo "$PR_FILES") <(echo "$UPSTREAM_FILES") 2>/dev/null || echo "")
-        
+
         if [ -n "$OVERLAPPING_FILES" ]; then
             if [ "$PR_STATE" = "MERGED" ]; then
                 echo "**Note:** These files were changed in your PR and have been modified again in upstream since the merge:" >> "$OUTPUT_FILE"
@@ -226,7 +222,7 @@ EOF
                 echo "- ✅ No overlapping files - no direct conflicts detected" >> "$OUTPUT_FILE"
             fi
         fi
-        
+
         cat >> "$OUTPUT_FILE" <<EOF
 
 ---
@@ -234,31 +230,31 @@ EOF
 ## Detailed Upstream Commits
 
 EOF
-        
+
         # Get detailed commit information
         COMMIT_INDEX=0
         git log --oneline "$MERGE_BASE..$UPSTREAM_BRANCH" 2>/dev/null | head -10 | while read -r commit_line; do
             COMMIT_INDEX=$((COMMIT_INDEX + 1))
             COMMIT_HASH=$(echo "$commit_line" | awk '{print $1}')
             COMMIT_MSG=$(echo "$commit_line" | cut -d' ' -f2-)
-            
+
             if [ -n "$COMMIT_HASH" ]; then
                 COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an" "$COMMIT_HASH" 2>/dev/null || echo "Unknown")
                 COMMIT_DATE=$(git log -1 --pretty=format:"%ad" --date=format:"%Y-%m-%d" "$COMMIT_HASH" 2>/dev/null || echo "Unknown")
                 COMMIT_STAT=$(git show "$COMMIT_HASH" --stat --format="" 2>/dev/null | tail -1 || echo "")
-                
+
                 cat >> "$OUTPUT_FILE" <<EOF
 
 ### Commit $COMMIT_INDEX: ${COMMIT_HASH:0:8}
 
-**Message:** $COMMIT_MSG  
-**Author:** $COMMIT_AUTHOR  
-**Date:** $COMMIT_DATE  
+**Message:** $COMMIT_MSG
+**Author:** $COMMIT_AUTHOR
+**Date:** $COMMIT_DATE
 **Summary:** $COMMIT_STAT
 
 **Files Changed:**
 EOF
-                
+
                 git show "$COMMIT_HASH" --name-status --format="" 2>/dev/null | while read -r status file; do
                     if [ -n "$file" ]; then
                         case "$status" in
@@ -279,7 +275,7 @@ EOF
                         esac
                     fi
                 done
-                
+
                 cat >> "$OUTPUT_FILE" <<EOF
 
 EOF
@@ -336,4 +332,3 @@ echo -e "  1. Open the file in Cursor: ${CYAN}code $OUTPUT_FILE${NC}"
 echo -e "  2. Ask Cursor: ${CYAN}\"What upstream changes might affect this PR?\"${NC}"
 echo -e "  3. Or ask: ${CYAN}\"Are there any conflicts or compatibility issues?\"${NC}"
 echo ""
-

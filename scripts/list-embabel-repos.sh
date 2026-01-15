@@ -1,8 +1,13 @@
 #!/bin/bash
-# List all embabel repositories and show their status
+# List all upstream organization repositories and show their status
 # Shows which are forked, cloned, and have upstream configured
 
 set -e
+
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -11,25 +16,21 @@ RED='\033[0;31m'
 GRAY='\033[0;90m'
 NC='\033[0m'
 
-YOUR_USER="jmjava"
-EMBABEL_ORG="embabel"
-BASE_DIR="$HOME/github/jmjava"
-
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}Embabel Repository Status${NC}"
+echo -e "${GREEN}${UPSTREAM_ORG} Repository Status${NC}"
 echo -e "${GREEN}========================================${NC}\n"
 
-# Get all embabel repos
-echo -e "${YELLOW}📋 Fetching embabel repositories...${NC}"
-ALL_REPOS=$(gh repo list "$EMBABEL_ORG" --limit 100 --json name,description,stargazerCount,pushedAt,isArchived --jq '.[] | select(.isArchived == false) | @json' | sort)
+# Get all upstream org repos
+echo -e "${YELLOW}📋 Fetching ${UPSTREAM_ORG} repositories...${NC}"
+ALL_REPOS=$(gh repo list "$UPSTREAM_ORG" --limit 100 --json name,description,stargazerCount,pushedAt,isArchived --jq '.[] | select(.isArchived == false) | @json' | sort)
 
 if [ -z "$ALL_REPOS" ]; then
-    echo -e "${RED}❌ Could not fetch repositories${NC}"
+    echo -e "${RED}❌ Could not fetch repositories from ${UPSTREAM_ORG}${NC}"
     exit 1
 fi
 
 # Get your forks
-FORKED_REPOS=$(gh repo list "$YOUR_USER" --fork --limit 100 --json name,parent --jq ".[] | select(.parent.owner.login == \"$EMBABEL_ORG\") | .name")
+FORKED_REPOS=$(gh repo list "$YOUR_GITHUB_USER" --fork --limit 100 --json name,parent --jq ".[] | select(.parent.owner.login == \"$UPSTREAM_ORG\") | .name")
 
 echo -e "${GREEN}✓ Analysis complete${NC}\n"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -102,7 +103,7 @@ if [ $NOT_FORKED -gt 0 ]; then
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${YELLOW}You have $NOT_FORKED repositories not yet forked${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo "Run: ./fork-all-embabel.sh"
+    echo "Run: $SCRIPT_DIR/fork-all-embabel.sh"
     echo ""
 fi
 
@@ -111,7 +112,7 @@ if [ $NOT_CLONED -gt 0 ]; then
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${YELLOW}You have $NOT_CLONED forked repos not yet cloned${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo "Run: ./clone-embabel-repos.sh"
+    echo "Run: $SCRIPT_DIR/clone-embabel-repos.sh"
     echo ""
 fi
 
@@ -120,7 +121,7 @@ if [ $NO_UPSTREAM -gt 0 ]; then
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${YELLOW}You have $NO_UPSTREAM cloned repos without upstream${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo "Run: ./setup-upstreams.sh"
+    echo "Run: $SCRIPT_DIR/setup-upstreams.sh"
     echo ""
 fi
 

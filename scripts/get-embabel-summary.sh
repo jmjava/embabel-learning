@@ -1,11 +1,13 @@
 #!/bin/bash
-# Get comprehensive summary of all embabel repositories
+# Get comprehensive summary of all upstream organization repositories
 # Usage: ./get-embabel-summary.sh [repo-name] or all [--no-color]
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BASE_DIR="$HOME/github/jmjava"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || pwd)"
+LEARNING_DIR="$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd || pwd)"
+source "$SCRIPT_DIR/config-loader.sh"
 
 # Check for no-color flag
 NO_COLOR=false
@@ -27,15 +29,15 @@ fi
 get_repo_summary() {
     local repo_name=$1
     local repo_dir="$BASE_DIR/$repo_name"
-    local upstream_repo="embabel/$repo_name"
-    
+    local upstream_repo="${UPSTREAM_ORG}/$repo_name"
+
     if [ ! -d "$repo_dir" ]; then
         echo "⚠️  $repo_name: Not cloned locally"
         return
     fi
-    
+
     cd "$repo_dir" 2>/dev/null || return
-    
+
     if [ "$NO_COLOR" = false ]; then
         echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         echo -e "${BLUE}📦 $repo_name${NC}"
@@ -44,20 +46,20 @@ get_repo_summary() {
         echo "#### $repo_name"
         echo ""
     fi
-    
+
     # Sync status (only show in interactive mode)
     if [ "$NO_COLOR" = false ]; then
         if git remote | grep -q "upstream"; then
             git fetch upstream --quiet 2>/dev/null || true
             MAIN_BRANCH=$(git rev-parse --abbrev-ref upstream/main 2>/dev/null || git rev-parse --abbrev-ref upstream/master 2>/dev/null || echo "main")
-            
+
             LOCAL=$(git rev-parse HEAD 2>/dev/null)
             UPSTREAM=$(git rev-parse "upstream/$MAIN_BRANCH" 2>/dev/null || echo "")
-            
+
             if [ -n "$UPSTREAM" ] && [ "$LOCAL" != "$UPSTREAM" ]; then
                 BEHIND=$(git rev-list --count HEAD.."upstream/$MAIN_BRANCH" 2>/dev/null || echo "0")
                 AHEAD=$(git rev-list --count "upstream/$MAIN_BRANCH"..HEAD 2>/dev/null || echo "0")
-                
+
                 if [ "$BEHIND" -gt 0 ]; then
                     echo -e "${YELLOW}⚠️  Sync Status: $BEHIND commits behind upstream${NC}"
                 fi
@@ -71,7 +73,7 @@ get_repo_summary() {
             echo -e "${YELLOW}⚠️  No upstream remote configured${NC}"
         fi
     fi
-    
+
     # Open PRs
     echo ""
     if [ "$NO_COLOR" = false ]; then
@@ -81,7 +83,7 @@ get_repo_summary() {
     fi
     OPEN_PRS=$(gh pr list --repo "$upstream_repo" --state open --limit 10 --json number,title,author,createdAt,url 2>/dev/null || echo "[]")
     PR_COUNT=$(echo "$OPEN_PRS" | jq '. | length' 2>/dev/null || echo "0")
-    
+
     if [ "$PR_COUNT" -gt 0 ]; then
         if [ "$NO_COLOR" = false ]; then
             echo "$OPEN_PRS" | jq -r '.[] | "  • PR #\(.number): \(.title) (by \(.author.login), \(.createdAt))"' 2>/dev/null || echo "  (Unable to parse PRs)"
@@ -91,7 +93,7 @@ get_repo_summary() {
     else
         echo "  None"
     fi
-    
+
     # Recent releases
     echo ""
     if [ "$NO_COLOR" = false ]; then
@@ -101,7 +103,7 @@ get_repo_summary() {
     fi
     RELEASES=$(gh release list --repo "$upstream_repo" --limit 3 --json tagName,publishedAt,url 2>/dev/null || echo "[]")
     RELEASE_COUNT=$(echo "$RELEASES" | jq '. | length' 2>/dev/null || echo "0")
-    
+
     if [ "$RELEASE_COUNT" -gt 0 ]; then
         if [ "$NO_COLOR" = false ]; then
             echo "$RELEASES" | jq -r '.[] | "  • \(.tagName) - Published: \(.publishedAt)"' 2>/dev/null || echo "  (Unable to parse releases)"
@@ -111,7 +113,7 @@ get_repo_summary() {
     else
         echo "  None"
     fi
-    
+
     # Recent commits (last 5)
     echo ""
     if [ "$NO_COLOR" = false ]; then
@@ -125,7 +127,7 @@ get_repo_summary() {
     else
         echo "  (No upstream configured)"
     fi
-    
+
     echo ""
 }
 
@@ -133,16 +135,16 @@ get_repo_summary() {
 if [ "$1" = "all" ] || [ -z "$1" ]; then
     # Focus on main repos for catch-up summaries
     MAIN_REPOS=("guide" "embabel-agent")
-    
+
     for repo_name in "${MAIN_REPOS[@]}"; do
         get_repo_summary "$repo_name"
     done
-    
+
     # Optionally include other repos if not in no-color mode (interactive use)
     if [ "$NO_COLOR" = false ]; then
         # Get other embabel repos
         REPOS=$(gh repo list embabel --limit 50 --json name 2>/dev/null | jq -r '.[].name' 2>/dev/null || echo "")
-        
+
         if [ -n "$REPOS" ]; then
             echo "$REPOS" | while read -r repo_name; do
                 # Skip main repos already shown
@@ -155,4 +157,3 @@ if [ "$1" = "all" ] || [ -z "$1" ]; then
 else
     get_repo_summary "$1"
 fi
-
