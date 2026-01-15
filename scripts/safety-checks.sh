@@ -8,34 +8,38 @@ YELLOW='\033[1;33m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-# Check if current directory is an embabel organization repo
+# Check if current directory is an upstream organization repo
 check_embabel_repo() {
     if [ ! -d .git ]; then
         return 1  # Not a git repo
     fi
 
-    # Check all remotes for embabel organization
-    local remotes=$(git remote -v 2>/dev/null | grep -i "embabel/" | grep -v "jmjava" || true)
+    # Get upstream org from config (default to embabel for backward compatibility)
+    local upstream_org="${UPSTREAM_ORG:-embabel}"
+    local your_user="${YOUR_GITHUB_USER:-jmjava}"
+
+    # Check all remotes for upstream organization
+    local remotes=$(git remote -v 2>/dev/null | grep -i "${upstream_org}/" | grep -v "${your_user}" || true)
 
     if [ -n "$remotes" ]; then
-        # Check if origin points to embabel (not jmjava fork)
+        # Check if origin points to upstream org (not user's fork)
         local origin_url=$(git remote get-url origin 2>/dev/null || echo "")
-        if [[ "$origin_url" == *"embabel/"* ]] && [[ "$origin_url" != *"jmjava"* ]]; then
-            return 0  # This is an embabel repo
+        if [[ "$origin_url" == *"${upstream_org}/"* ]] && [[ "$origin_url" != *"${your_user}"* ]]; then
+            return 0  # This is an upstream org repo
         fi
 
-        # Check if we're in a directory that's clearly an embabel repo
+        # Check if we're in a directory that's clearly an upstream org repo
         local current_dir=$(pwd)
-        if [[ "$current_dir" == *"/embabel-"* ]] || [[ "$current_dir" == *"/guide"* ]]; then
-            # Double check - if upstream is embabel and origin is not jmjava, it's embabel
+        if [[ "$current_dir" == *"/${upstream_org}-"* ]] || [[ "$current_dir" == *"/guide"* ]]; then
+            # Double check - if upstream is upstream org and origin is not user's fork, it's upstream org
             local upstream_url=$(git remote get-url upstream 2>/dev/null || echo "")
-            if [[ "$upstream_url" == *"embabel/"* ]] && [[ "$origin_url" != *"jmjava"* ]]; then
-                return 0  # This is an embabel repo
+            if [[ "$upstream_url" == *"${upstream_org}/"* ]] && [[ "$origin_url" != *"${your_user}"* ]]; then
+                return 0  # This is an upstream org repo
             fi
         fi
     fi
 
-    return 1  # Not an embabel repo
+    return 1  # Not an upstream org repo
 }
 
 # Block commits in embabel repos
@@ -61,27 +65,31 @@ block_embabel_commit() {
     return 0
 }
 
-# Block pushes to embabel organization
+# Block pushes to upstream organization
 block_embabel_push() {
     local remote=${1:-origin}
     local remote_url=$(git remote get-url "$remote" 2>/dev/null || echo "")
 
-    if [[ "$remote_url" == *"embabel/"* ]] && [[ "$remote_url" != *"jmjava"* ]]; then
-        echo -e "${RED}✗ SAFETY BLOCK: Cannot push to embabel organization${NC}"
+    # Get upstream org from config (default to embabel for backward compatibility)
+    local upstream_org="${UPSTREAM_ORG:-embabel}"
+    local your_user="${YOUR_GITHUB_USER:-jmjava}"
+
+    if [[ "$remote_url" == *"${upstream_org}/"* ]] && [[ "$remote_url" != *"${your_user}"* ]]; then
+        echo -e "${RED}✗ SAFETY BLOCK: Cannot push to ${upstream_org} organization${NC}"
         echo -e "${YELLOW}Remote: $remote${NC}"
         echo -e "${YELLOW}Remote URL: $remote_url${NC}"
         echo ""
         echo -e "${YELLOW}This workspace is configured for LEARNING ONLY:${NC}"
-        echo -e "  • You can READ and SYNC FROM embabel repos"
-        echo -e "  • You CANNOT push TO embabel repos"
+        echo -e "  • You can READ and SYNC FROM ${upstream_org} repos"
+        echo -e "  • You CANNOT push TO ${upstream_org} repos"
         echo ""
-        echo -e "${GREEN}To contribute to embabel:${NC}"
-        echo -e "  1. Make sure 'origin' points to YOUR fork (jmjava/...)"
+        echo -e "${GREEN}To contribute to ${upstream_org}:${NC}"
+        echo -e "  1. Make sure 'origin' points to YOUR fork (${your_user}/...)"
         echo -e "  2. Push to your fork"
-        echo -e "  3. Create a PR from your fork to embabel"
+        echo -e "  3. Create a PR from your fork to ${upstream_org}"
         echo ""
         echo -e "${YELLOW}To fix your remote:${NC}"
-        echo -e "  git remote set-url origin git@github.com:jmjava/REPO_NAME.git"
+        echo -e "  git remote set-url origin git@github.com:${your_user}/REPO_NAME.git"
         echo ""
         return 1
     fi
@@ -99,13 +107,31 @@ warn_if_embabel_repo() {
     return 1
 }
 
-# Check if remote is safe (points to jmjava, not embabel)
+# Check if remote is safe (points to user's fork, not upstream org)
 is_safe_remote() {
     local remote=${1:-origin}
     local remote_url=$(git remote get-url "$remote" 2>/dev/null || echo "")
 
-    if [[ "$remote_url" == *"embabel/"* ]] && [[ "$remote_url" != *"jmjava"* ]]; then
+    # Get upstream org from config (default to embabel for backward compatibility)
+    local upstream_org="${UPSTREAM_ORG:-embabel}"
+    local your_user="${YOUR_GITHUB_USER:-jmjava}"
+
+    if [[ "$remote_url" == *"${upstream_org}/"* ]] && [[ "$remote_url" != *"${your_user}"* ]]; then
         return 1  # Not safe
     fi
     return 0  # Safe
+}
+
+# Backward compatibility aliases (for tests and older scripts)
+# These map the old "upstream" naming to the new "embabel" naming
+block_upstream_commit() {
+    block_embabel_commit "$@"
+}
+
+block_upstream_push() {
+    block_embabel_push "$@"
+}
+
+check_upstream_repo() {
+    check_embabel_repo "$@"
 }

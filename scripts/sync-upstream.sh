@@ -80,33 +80,40 @@ sync_repo() {
     if git merge upstream/$main_branch --no-edit; then
         echo -e "${GREEN}✓ Successfully synced with upstream/$main_branch${NC}"
 
-        # Show what origin points to
-        ORIGIN_URL=$(git remote get-url origin 2>/dev/null || echo "")
-        if [[ "$ORIGIN_URL" == *"jmjava"* ]]; then
-            ORIGIN_DESC="your fork (jmjava/$repo_name)"
-        else
-            ORIGIN_DESC="origin ($ORIGIN_URL)"
-        fi
+        # Check if there are commits to push
+        local commits_ahead=$(git rev-list --count origin/$current_branch..HEAD 2>/dev/null || echo "0")
 
-        # Offer to push
-        echo ""
-        echo -e "${YELLOW}Push synced changes to $ORIGIN_DESC? (y/n)${NC}"
-        echo -e "${CYAN}Note: This pushes to YOUR fork, not to embabel${NC}"
-        read -p "> " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            # Use safe push if available (with safety check for embabel)
-            if command -v epush &> /dev/null || [ -f "$HOME/github/jmjava/embabel-learning/scripts/safe-push.sh" ]; then
-                echo -e "${YELLOW}Using safe push (with security checks)...${NC}"
-                "$HOME/github/jmjava/embabel-learning/scripts/safe-push.sh" "$current_branch" origin
+        if [ "$commits_ahead" -eq 0 ]; then
+            echo -e "${BLUE}ℹ️  Branch is already up-to-date with origin${NC}"
+        else
+            # Show what origin points to
+            ORIGIN_URL=$(git remote get-url origin 2>/dev/null || echo "")
+            if [[ "$ORIGIN_URL" == *"jmjava"* ]]; then
+                ORIGIN_DESC="your fork (jmjava/$repo_name)"
             else
-                # Safety check before direct push (using safety-checks.sh)
-                if ! block_embabel_push origin; then
-                    return 1
+                ORIGIN_DESC="origin ($ORIGIN_URL)"
+            fi
+
+            # Offer to push
+            echo ""
+            echo -e "${YELLOW}Push synced changes to $ORIGIN_DESC? (y/n)${NC}"
+            echo -e "${CYAN}Note: This pushes to YOUR fork, not to embabel${NC}"
+            read -p "> " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                # Use safe push if available (with safety check for embabel)
+                if command -v epush &> /dev/null || [ -f "$HOME/github/jmjava/embabel-learning/scripts/safe-push.sh" ]; then
+                    echo -e "${YELLOW}Using safe push (with security checks)...${NC}"
+                    "$HOME/github/jmjava/embabel-learning/scripts/safe-push.sh" "$current_branch" origin
+                else
+                    # Safety check before direct push (using safety-checks.sh)
+                    if ! block_embabel_push origin; then
+                        return 1
+                    fi
+                    git push origin "$current_branch"
+                    echo -e "${GREEN}✓ Pushed to origin/$current_branch${NC}"
+                    echo -e "${YELLOW}💡 Tip: Use 'epush' for security checks before pushing${NC}"
                 fi
-                git push origin "$current_branch"
-                echo -e "${GREEN}✓ Pushed to origin/$current_branch${NC}"
-                echo -e "${YELLOW}💡 Tip: Use 'epush' for security checks before pushing${NC}"
             fi
         fi
     else
