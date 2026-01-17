@@ -52,6 +52,14 @@ The script will:
 4. Wait for the application to start (30-60 seconds)
 5. Verify the web server is responding
 
+## Stopping the Hub
+
+To stop and remove the container:
+
+```bash
+./embabel-hub/stophub.sh
+```
+
 ## Services
 
 Once started, the following services are available:
