@@ -87,12 +87,12 @@ public class JavaAgentShellApplication { }
 @SpringBootApplication
 @EnableAgents(
     loggingTheme = LoggingThemes.SEVERANCE,
-    mcpServers = {McpServers.DOCKER_DESKTOP}
+    mcpServers = {McpServers.DOCKER_DESKTOP}  // Or McpServers.DOCKER for Linux
 )
 public class JavaAgentShellMcpClientApplication { }
 ```
 
-Enables access to external MCP tools like Docker Desktop.
+Enables access to external MCP tools. See [Linux Setup](#linux-setup-for-mcp-tools) for platform-specific options.
 
 ### 3. MCP Server Mode
 
@@ -280,6 +280,69 @@ Using `mcpServers = {McpServers.DOCKER_DESKTOP}` enables agents to use:
 - Docker container execution
 - Containerized services
 - Other MCP-compatible tools
+
+---
+
+## Linux Setup for MCP Tools
+
+On Linux, you have two options for MCP tool integration:
+
+### Option 1: Native Docker (docker-ce) - Recommended for Linux
+
+Use `McpServers.DOCKER` which runs individual MCP servers as Docker containers:
+
+```java
+@EnableAgents(mcpServers = {McpServers.DOCKER})
+```
+
+This activates the `docker-ce` profile which configures individual MCP containers:
+
+| MCP Server | Image | Purpose |
+|------------|-------|---------|
+| `brave-search-mcp` | `mcp/brave-search` | Web search (requires `BRAVE_API_KEY`) |
+| `fetch-mcp` | `mcp/fetch` | HTTP fetching |
+| `puppeteer-mcp` | `mcp/puppeteer` | Browser automation |
+| `wikipedia-mcp` | `mcp/wikipedia-mcp` | Wikipedia access |
+| `github-mcp` | `mcp/github` | GitHub API (requires `GITHUB_PERSONAL_ACCESS_TOKEN`) |
+| `google-maps-mcp` | `mcp/google-maps` | Maps API (requires `GOOGLE_MAPS_API_KEY`) |
+
+**Pre-pull the images** for faster startup:
+
+```bash
+docker pull mcp/fetch
+docker pull mcp/puppeteer
+docker pull mcp/wikipedia-mcp
+# Add others as needed
+```
+
+### Option 2: Docker Desktop on Linux
+
+If you install [Docker Desktop for Linux](https://docs.docker.com/desktop/install/linux-install/), you can use `McpServers.DOCKER_DESKTOP` which leverages the Docker MCP Gateway:
+
+```java
+@EnableAgents(mcpServers = {McpServers.DOCKER_DESKTOP})
+```
+
+First, ensure the MCP gateway is ready:
+
+```bash
+docker login
+docker mcp gateway run  # Wait for it to come up, then Ctrl+C
+```
+
+### Comparison
+
+| Constant | Profile | Platform | Description |
+|----------|---------|----------|-------------|
+| `McpServers.DOCKER` | `docker-ce` | Linux (native Docker) | Individual container MCP servers |
+| `McpServers.DOCKER_DESKTOP` | `docker-desktop` | Any (Docker Desktop) | MCP Gateway from Docker Desktop extension |
+
+### Configuration Files
+
+The profile-specific configurations are in `examples-common/src/main/resources/`:
+
+- `application-docker-ce.yml` - Individual container configuration
+- `application-docker-desktop.yml` - Docker Desktop MCP Gateway configuration
 
 ---
 
