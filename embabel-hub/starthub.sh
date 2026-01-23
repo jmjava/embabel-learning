@@ -38,12 +38,34 @@ if docker ps -a --format '{{.Names}}' | grep -q "^embabel-hub$"; then
     echo "Existing container removed"
 fi
 
+# Remove old embabel/hub images to ensure fresh pull
+echo "Removing old embabel/hub images..."
+OLD_IMAGES=$(docker images "embabel/hub" -q)
+if [ -n "$OLD_IMAGES" ]; then
+    echo "$OLD_IMAGES" | xargs docker rmi -f 2>/dev/null || true
+fi
+echo "Old images removed"
+
+# Pull the latest image
+echo "Pulling latest embabel/hub image..."
+docker pull embabel/hub:latest
+if [ $? -ne 0 ]; then
+    echo "✗ Failed to pull embabel/hub:latest"
+    exit 1
+fi
+echo "✓ Latest image pulled successfully"
+
 echo "Starting new embabel-hub container..."
+# Note: Removed --platform linux/amd64 to allow Docker to use available image with emulation if needed
+# Port mappings:
+#   - 21337:1337 - Guide API (Tomcat runs on 1337 inside container)
+#   - 27474:7474 - Neo4j Browser (HTTP)
+#   - 27687:7687 - Neo4j Bolt (Bolt protocol)
+#   - 8042:8042  - Frontend
 # pragma: allowlist secret
 docker run -d \
-  --platform linux/amd64 \
   --name embabel-hub \
-  -p 1337:1337 \
+  -p 21337:1337 \
   -p 27474:7474 \
   -p 27687:7687 \
   -p 8042:8042 \
@@ -61,7 +83,7 @@ if [ $? -eq 0 ]; then
     max_wait=60
     elapsed=0
     while [ $elapsed -lt $max_wait ]; do
-        if curl -s -f http://localhost:1337 > /dev/null 2>&1; then
+        if curl -s -f http://localhost:21337 > /dev/null 2>&1; then
             echo "✓ Web server is responding!"
             break
         fi
@@ -71,12 +93,15 @@ if [ $? -eq 0 ]; then
     done
 
     # Check if server is responding
-    if curl -s -f http://localhost:1337 > /dev/null 2>&1; then
+    if curl -s -f http://localhost:21337 > /dev/null 2>&1; then
         echo ""
-        echo "Hub: http://localhost:1337"
-        echo "Neo4j Browser: http://localhost:27474"
-        echo "Neo4j Bolt: bolt://localhost:27687"
-        echo "Additional service: http://localhost:8042"
+        echo "✓ Embabel Hub is running!"
+        echo ""
+        echo "Available services:"
+        echo "  - Guide API:    http://localhost:21337"
+        echo "  - Neo4j Browser: http://localhost:27474"
+        echo "  - Neo4j Bolt:   bolt://localhost:27687"
+        echo "  - Frontend:     http://localhost:8042"
     else
         echo ""
         echo "⚠ Warning: Container started but web server is not responding"
