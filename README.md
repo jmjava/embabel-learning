@@ -60,6 +60,7 @@ See [CONFIGURATION.md](CONFIGURATION.md) for detailed configuration options.
 | **Generate daily checklist**   | `echecklist`                  |
 | **Catch up after break**       | `ecatchup`                    |
 | **Embabel repo summaries**     | `esummary`                    |
+| **Sync Discord messages**     | `ediscord --channel ID --after DATE` |
 
 ## 🚀 Quick Start (5 minutes)
 
@@ -174,6 +175,26 @@ embabel-learning/
 | --------------------- | ----- | -------------------------------------- |
 | `setup-pre-commit.sh` | -     | Setup pre-commit hooks and GitGuardian |
 
+### Discord Integration
+
+| Script/Tool                    | Alias     | Description                                                          |
+| ------------------------------ | --------- | -------------------------------------------------------------------- |
+| `discord-sync/sync-discord.sh` | `ediscord` | Export and summarize Discord messages with filtering options          |
+|                                |           | See [discord-sync/README.md](discord-sync/README.md) for full docs   |
+
+**Features:**
+- Date range filtering (`--after`, `--before`)
+- Username filtering (`--username`, supports multiple)
+- Topic/keyword filtering (`--topic`, supports multiple)
+- Multiple output formats (JSON, TXT, HTML)
+- Automatic summary generation with statistics
+
+**Quick Example:**
+```bash
+# Export today's messages
+ediscord --channel YOUR_CHANNEL_ID --after "2026-01-25"
+```
+
 ### Navigation & Workspace
 
 | Script              | Alias        | Description                         |
@@ -286,6 +307,71 @@ ecompare
 cd ~/github/jmjava/guide
 git diff upstream/main
 ```
+
+### Syncing Discord Messages
+
+Export and summarize Discord messages from channels you're a member of:
+
+```bash
+# Basic: Export today's messages
+ediscord --channel YOUR_CHANNEL_ID --after "2026-01-25"
+
+# With date range
+ediscord --channel YOUR_CHANNEL_ID \
+  --after "2026-01-25T00:00:00" \
+  --before "2026-01-26T00:00:00"
+
+# Filter by specific users
+ediscord --channel YOUR_CHANNEL_ID \
+  --after "2026-01-25" \
+  --username "alice" \
+  --username "bob"
+
+# Filter by topics/keywords
+ediscord --channel YOUR_CHANNEL_ID \
+  --after "2026-01-25" \
+  --topic "embabel" \
+  --topic "agent"
+
+# Combined filters (users AND topics)
+ediscord --channel YOUR_CHANNEL_ID \
+  --after "2026-01-25" \
+  --username "alice" \
+  --topic "embabel"
+
+# Different output formats
+ediscord --channel YOUR_CHANNEL_ID \
+  --after "2026-01-25" \
+  --format json    # Default, enables summary generation
+ediscord --channel YOUR_CHANNEL_ID \
+  --after "2026-01-25" \
+  --format txt     # Plain text
+ediscord --channel YOUR_CHANNEL_ID \
+  --after "2026-01-25" \
+  --format html    # HTML format
+
+# Get help
+ediscord --help
+```
+
+**Finding Your Channel ID:**
+1. Enable Developer Mode in Discord (User Settings → Advanced → Developer Mode)
+2. Right-click on the channel
+3. Select "Copy ID"
+
+**Output Files:**
+- Exports saved to: `exports/discord/`
+- JSON exports automatically generate summary markdown files with:
+  - Statistics (message count, unique authors, date range)
+  - Top contributors
+  - Recent messages
+  - Topic analysis
+  - Media & links count
+
+**Configuration:**
+Set `DISCORD_TOKEN` in your `.env` file (see [discord-sync/README.md](discord-sync/README.md) for token setup instructions).
+
+See [discord-sync/README.md](discord-sync/README.md) for complete documentation.
 
 ## 🎓 Learning Resources
 
