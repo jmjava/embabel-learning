@@ -83,6 +83,7 @@ alias epush='$SCRIPT_DIR/safe-push.sh'
 alias ereset='$SCRIPT_DIR/reset-to-upstream.sh'
 alias elearn='cd $LEARNING_DIR'
 alias eworkspace='$SCRIPT_DIR/open-workspace.sh'
+alias ediscord='$LEARNING_DIR/discord-sync/sync-discord.sh'
 ${REPO_ALIASES}
 # Git shortcuts
 alias gst='git status'
@@ -124,6 +125,7 @@ echo "  epush      - Safe push with GitGuardian & pre-commit checks"
 echo "  ereset     - Reset fork to match upstream (discards local changes)"
 echo "  elearn     - cd to learning workspace"
 echo "  eworkspace - Open multi-repo workspace in Cursor"
+echo "  ediscord   - Sync and summarize Discord messages (use --help for options)"
 if [ -n "$MONITOR_REPOS" ]; then
     echo "  Repo aliases:"
     for repo in $MONITOR_REPOS; do
