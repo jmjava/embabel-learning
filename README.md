@@ -111,12 +111,23 @@ embabel-learning/
 │   ├── view-pr.sh            # Analyze specific PRs
 │   ├── setup-aliases.sh       # Install convenient shell aliases
 │   └── setup-pre-commit.sh   # Setup pre-commit & GitGuardian
+├── discord-sync/              # Discord message export and summarization
+│   ├── sync-discord.sh        # Export and summarize Discord messages
+│   └── README.md              # Discord sync documentation
+├── embabel-hub/               # Embabel Hub Docker container management
+│   ├── starthub.sh            # Start embabel-hub container
+│   ├── stophub.sh             # Stop embabel-hub container
+│   └── STARTUP.md             # Hub startup guide
 ├── docs/                       # Documentation
 │   └── EMBABEL-WORKFLOW.md    # Complete detailed workflow guide
 ├── notes/                      # Your personal learning notes
 │   ├── session-notes/          # Weekly notes and catch-up summaries
 │   ├── my-contributions/       # Your PR and contribution tracking
 │   └── discussions/            # PR discussion briefs
+├── test/                       # Test suite
+│   ├── ARCHITECTURE.md         # Test architecture documentation
+│   ├── unit/                   # Unit tests
+│   └── run-tests.sh           # Test runner
 ├── .pre-commit-config.yaml    # Pre-commit hooks configuration
 ├── .yamllint.yml              # YAML linting rules
 ├── .secrets.baseline          # Secrets detection baseline
@@ -423,7 +434,32 @@ git fetch upstream
 git merge upstream/main
 ```
 
-### 4. These Scripts
+### 4. Discord Sync
+
+For exporting and summarizing Discord messages:
+
+```bash
+# Export messages from a channel
+ediscord --channel YOUR_CHANNEL_ID \
+  --after "2026-01-25" \
+  --before "2026-01-26"
+
+# Filter by username
+ediscord --channel YOUR_CHANNEL_ID \
+  --after "2026-01-25" \
+  --username "alice" \
+  --username "bob"
+
+# Filter by topic
+ediscord --channel YOUR_CHANNEL_ID \
+  --after "2026-01-25" \
+  --topic "embabel" \
+  --topic "agent"
+```
+
+See [discord-sync/README.md](discord-sync/README.md) for complete documentation.
+
+### 5. These Scripts
 
 For automation and monitoring!
 
