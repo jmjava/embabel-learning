@@ -43,3 +43,6 @@ embabel-hub/.env
 *.env
 .env.local
 .env.*.local
+
+# Discord exports (may contain sensitive messages)
+exports/discord/

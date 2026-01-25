@@ -198,6 +198,10 @@ runTests() {
 
     export RUNNING_TESTS=true
 
+    # Disable parent shell's EXIT trap to prevent duplicate summary
+    # The summary will be printed from within the subshell
+    trap - EXIT
+
     # Extract test functions before sourcing (to avoid recursion)
     local test_functions=$(grep -E '^test[A-Za-z_][A-Za-z0-9_]*\(' "$test_file" | sed 's/(.*$//' | sort)
 
@@ -210,6 +214,9 @@ runTests() {
     (
         # Source test framework again to get fresh counters in subshell
         source "$TEST_FRAMEWORK" 2>/dev/null || true
+
+        # Disable the EXIT trap in subshell - we'll print summary manually
+        trap - EXIT
 
         # Source the actual test file
         source "$test_file"
@@ -227,12 +234,17 @@ runTests() {
             tearDown
             echo ""
         done
+
+        # Print summary before exiting subshell
+        printSummary
     )
+
+    local exit_code=$?
 
     unset RUNNING_TESTS
 
-    # Note: The counters are updated by assertion functions which run in the subshell
-    # The parent shell still has the original counters, which is what we want
+    # Return the exit code from the subshell
+    return $exit_code
 }
 
 # Print summary

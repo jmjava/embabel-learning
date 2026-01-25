@@ -59,6 +59,7 @@ cat >> "$ALIAS_FILE" << EOF
 ${ALIAS_SECTION_HEADER}
 alias em='$SCRIPT_DIR/monitor-embabel.sh'
 alias esync='$SCRIPT_DIR/sync-upstream.sh all'
+alias esyncguide='$SCRIPT_DIR/sync-upstream.sh guide'
 alias ecompare='$SCRIPT_DIR/compare-branches.sh all'
 alias elist='$SCRIPT_DIR/list-embabel-repos.sh'
 alias efork='$SCRIPT_DIR/fork-all-embabel.sh'
@@ -100,6 +101,7 @@ echo ""
 echo "Aliases added:"
 echo "  em         - Monitor ${UPSTREAM_ORG} projects"
 echo "  esync      - Sync with upstream"
+echo "  esyncguide - Sync guide repo with upstream"
 echo "  ecompare   - Compare with upstream"
 echo "  elist      - List all ${UPSTREAM_ORG} repos and status"
 echo "  efork      - Fork all ${UPSTREAM_ORG} repositories"
