@@ -2,6 +2,10 @@
 
 This directory contains unit and integration tests for the shell scripts in the `embabel-learning` workspace.
 
+**📖 Important:** Read [ARCHITECTURE.md](ARCHITECTURE.md) before writing tests! It explains how to properly use the configuration system and avoid hardcoding values.
+
+**📖 Important:** Read [ARCHITECTURE.md](ARCHITECTURE.md) before writing tests! It explains how to properly use the configuration system and avoid hardcoding values.
+
 ## Structure
 
 ```
@@ -12,7 +16,8 @@ test/
 │   └── test-framework.sh       # Simple test framework (self-contained)
 ├── unit/
 │   ├── test-config-loader.sh   # Tests for config-loader.sh
-│   └── test-safety-checks.sh   # Tests for safety-checks.sh
+│   ├── test-safety-checks.sh   # Tests for safety-checks.sh
+│   └── test-sync-discord.sh   # Tests for discord-sync/sync-discord.sh
 └── integration/
     └── (future integration tests)
 ```
@@ -54,6 +59,11 @@ bash test-config-loader.sh
 The test framework shows detailed output by default. To see more details, check the test file directly.
 
 ## Writing New Tests
+
+**⚠️ CRITICAL:** Before writing tests, read [ARCHITECTURE.md](ARCHITECTURE.md) to understand:
+- How to use the configuration system (never hardcode values!)
+- How `TEST_UPSTREAM_ORG` works
+- Best practices for test structure
 
 ### Example Test File
 
@@ -109,6 +119,7 @@ fi
 
 - ✅ **config-loader.sh** - Configuration loading, defaults, warnings
 - ✅ **safety-checks.sh** - Commit/push blocking, repo detection
+- ✅ **sync-discord.sh** - Discord sync script argument parsing, validation, path resolution
 
 ### Planned Tests
 

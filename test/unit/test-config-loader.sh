@@ -79,6 +79,10 @@ EOF
     local output=$(bash -c "
         export LEARNING_DIR='$LEARNING_DIR'
         export CONFIG_WARNING_SHOWN=false
+        # For this specific test, we want to test config file loading without TEST_UPSTREAM_ORG override
+        # So we unset it and set TEST_MODE=false for this test only
+        unset TEST_UPSTREAM_ORG
+        export TEST_MODE=false
         source '$SCRIPTS_DIR/config-loader.sh' 2>&1
         echo \"USER=\$YOUR_GITHUB_USER\"
         echo \"ORG=\$UPSTREAM_ORG\"

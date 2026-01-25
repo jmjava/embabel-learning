@@ -65,15 +65,16 @@ load_safety_checks() {
 
     # Set environment for config-loader
     export LEARNING_DIR="$TEST_ROOT"
-    export YOUR_GITHUB_USER="${YOUR_GITHUB_USER:-testuser}"
-    export UPSTREAM_ORG="${UPSTREAM_ORG:-testorg}"
-    export BASE_DIR="${BASE_DIR:-/tmp/test-repos}"
+    # Don't set defaults here - let config-loader load from config file
 
     # Load config-loader first (it needs LEARNING_DIR set)
     if [ -f "$scripts_source_dir/config-loader.sh" ]; then
         # Temporarily set SCRIPT_DIR for config-loader if needed
         local old_script_dir="${SCRIPT_DIR:-}"
         export SCRIPT_DIR="$(dirname "$scripts_source_dir/config-loader.sh")"
+        # TEST_MODE is already set to true by run-tests.sh
+        # If TEST_UPSTREAM_ORG is set, config-loader will use it (which is the intended behavior)
+        # Otherwise, it will use UPSTREAM_ORG from config file
         source "$scripts_source_dir/config-loader.sh" 2>/dev/null || {
             # Config-loader might fail, but continue anyway
             true
@@ -81,7 +82,9 @@ load_safety_checks() {
         [ -n "$old_script_dir" ] && export SCRIPT_DIR="$old_script_dir" || unset SCRIPT_DIR
     fi
 
-    # Ensure variables are set (either from config or defaults)
+    # Variables should now be loaded from config file via config-loader
+    # If TEST_UPSTREAM_ORG is set, it will override UPSTREAM_ORG (intended for test safety)
+    # If config-loader failed, use defaults as fallback
     export YOUR_GITHUB_USER="${YOUR_GITHUB_USER:-testuser}"
     export UPSTREAM_ORG="${UPSTREAM_ORG:-testorg}"
 
@@ -106,10 +109,9 @@ testBlockUpstreamCommit() {
     cd "$test_repo" || return 1
 
     git init --quiet
-    git remote add origin "git@github.com:testorg/repo.git" 2>/dev/null || git remote set-url origin "git@github.com:testorg/repo.git"
-
-    # Load safety checks using helper
+    # Use UPSTREAM_ORG from config (loaded by load_safety_checks)
     load_safety_checks
+    git remote add origin "git@github.com:${UPSTREAM_ORG}/repo.git" 2>/dev/null || git remote set-url origin "git@github.com:${UPSTREAM_ORG}/repo.git"
 
     # Verify function exists
     if ! type block_upstream_commit >/dev/null 2>&1; then
@@ -131,7 +133,9 @@ testAllowForkCommit() {
     cd "$test_repo" || return 1
 
     git init --quiet
-    git remote add origin "git@github.com:testuser/repo.git" 2>/dev/null || git remote set-url origin "git@github.com:testuser/repo.git"
+    # Load config first to get YOUR_GITHUB_USER
+    load_safety_checks
+    git remote add origin "git@github.com:${YOUR_GITHUB_USER}/repo.git" 2>/dev/null || git remote set-url origin "git@github.com:${YOUR_GITHUB_USER}/repo.git"
 
     # Load safety checks using helper
     load_safety_checks
@@ -156,10 +160,9 @@ testBlockUpstreamPush() {
     cd "$test_repo" || return 1
 
     git init --quiet
-    git remote add origin "git@github.com:testorg/repo.git" 2>/dev/null || git remote set-url origin "git@github.com:testorg/repo.git"
-
-    # Load safety checks using helper
+    # Use UPSTREAM_ORG from config (loaded by load_safety_checks)
     load_safety_checks
+    git remote add origin "git@github.com:${UPSTREAM_ORG}/repo.git" 2>/dev/null || git remote set-url origin "git@github.com:${UPSTREAM_ORG}/repo.git"
 
     # Verify function exists
     if ! type block_upstream_push >/dev/null 2>&1; then
@@ -181,7 +184,9 @@ testAllowForkPush() {
     cd "$test_repo" || return 1
 
     git init --quiet
-    git remote add origin "git@github.com:testuser/repo.git" 2>/dev/null || git remote set-url origin "git@github.com:testuser/repo.git"
+    # Load config first to get YOUR_GITHUB_USER
+    load_safety_checks
+    git remote add origin "git@github.com:${YOUR_GITHUB_USER}/repo.git" 2>/dev/null || git remote set-url origin "git@github.com:${YOUR_GITHUB_USER}/repo.git"
 
     # Load safety checks using helper
     load_safety_checks
@@ -206,10 +211,9 @@ testCheckUpstreamRepo() {
     cd "$test_repo" || return 1
 
     git init --quiet
-    git remote add origin "git@github.com:testorg/repo.git" 2>/dev/null || git remote set-url origin "git@github.com:testorg/repo.git"
-
-    # Load safety checks using helper
+    # Use UPSTREAM_ORG from config (loaded by load_safety_checks)
     load_safety_checks
+    git remote add origin "git@github.com:${UPSTREAM_ORG}/repo.git" 2>/dev/null || git remote set-url origin "git@github.com:${UPSTREAM_ORG}/repo.git"
 
     # Verify function exists
     if ! type check_upstream_repo >/dev/null 2>&1; then
@@ -231,7 +235,9 @@ testCheckUserRepo() {
     cd "$test_repo" || return 1
 
     git init --quiet
-    git remote add origin "git@github.com:testuser/repo.git" 2>/dev/null || git remote set-url origin "git@github.com:testuser/repo.git"
+    # Load config first to get YOUR_GITHUB_USER
+    load_safety_checks
+    git remote add origin "git@github.com:${YOUR_GITHUB_USER}/repo.git" 2>/dev/null || git remote set-url origin "git@github.com:${YOUR_GITHUB_USER}/repo.git"
 
     # Load safety checks using helper
     load_safety_checks

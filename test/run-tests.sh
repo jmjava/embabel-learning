@@ -29,6 +29,7 @@ FAILED_FILES=()
 TEST_FILES=(
     "$SCRIPT_DIR/unit/test-config-loader.sh"
     "$SCRIPT_DIR/unit/test-safety-checks.sh"
+    "$SCRIPT_DIR/unit/test-sync-discord.sh"
 )
 
 for test_file in "${TEST_FILES[@]}"; do
